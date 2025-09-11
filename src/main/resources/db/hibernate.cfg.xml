@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+    <session-factory>
+        <!-- Database Connection Settings ========================== -->
+        <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
+        <property name="hibernate.connection.url">jdbc:postgresql://localhost:5432/syosdb</property>
+        <property name="hibernate.connection.username">postgres</property>
+        <property name="hibernate.connection.password">apiit-LV6</property>
+        <property name="hibernate.default_schema">public</property>
+
+        <!-- HikariCP Connection Pool Settings ===================== -->
+        <property name="hibernate.hikari.minimumIdle">5</property>
+        <property name="hibernate.hikari.maximumPoolSize">20</property>
+        <property name="hibernate.hikari.idleTimeout">300000</property>
+        <property name="hibernate.hikari.connectionTimeout">20000</property>
+        <property name="hibernate.hikari.maxLifetime">1200000</property>
+        <property name="hibernate.hikari.poolName">SYOSHikariPool</property>
+        <property name="hibernate.hikari.leakDetectionThreshold">60000</property>
+        <property name="hibernate.hikari.autoCommit">false</property>
+        <property name="hibernate.hikari.dataSource.cachePrepStmts">true</property>
+        <property name="hibernate.hikari.dataSource.prepStmtCacheSize">250</property>
+        <property name="hibernate.hikari.dataSource.prepStmtCacheSqlLimit">2048</property>
+        <property name="hibernate.hikari.dataSource.reWriteBatchedInserts">true</property>
+
+        <!-- SQL Dialect =========================================== -->
+        <property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property>
+
+        <!-- JDBC Batch Processing ================================= -->
+        <property name="hibernate.jdbc.batch_size">25</property>
+        <property name="hibernate.jdbc.fetch_size">50</property>
+        <property name="hibernate.jdbc.use_scrollable_resultset">false</property>
+        <property name="hibernate.default_batch_fetch_size">16</property>
+        <property name="hibernate.order_inserts">true</property>
+        <property name="hibernate.order_updates">true</property>
+        <property name="hibernate.jdbc.batch_versioned_data">true</property>
+        <property name="hibernate.id.new_generator_mappings">true</property>
+
+        <!-- Schema Management ===================================== -->
+        <property name="hibernate.hbm2ddl.auto">validate</property>
+        <property name="hibernate.hbm2ddl.import_files_sql_extractor">
+            org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor
+        </property>
+
+        <!-- SQL Logging (Development Only) ======================== -->
+        <property name="hibernate.show_sql">false</property>
+        <property name="hibernate.format_sql">true</property>
+        <property name="hibernate.use_sql_comments">false</property>
+        <property name="hibernate.highlight_sql">true</property>
+
+        <!-- Statistics & Monitoring =============================== -->
+        <property name="hibernate.generate_statistics">true</property>
+        <property name="hibernate.session.events.log">false</property>
+
+        <!-- Bean Validation ======================================= -->
+        <property name="jakarta.persistence.validation.mode">AUTO</property>
+        <property name="hibernate.check_nullability">true</property>
+
+        <!-- Timezone Configuration ================================ -->
+        <property name="hibernate.jdbc.time_zone">Asia/Colombo</property>
+
+        <!-- Transaction Configuration ============================= -->
+        <property name="hibernate.connection.handling_mode">DELAYED_ACQUISITION_AND_HOLD</property>
+        <property name="hibernate.connection.provider_disables_autocommit">true</property>
+
+        <!-- Lazy Loading Configuration ============================  -->
+        <property name="hibernate.enable_lazy_load_no_trans">false</property>
+        <property name="hibernate.bytecode.use_reflection_optimizer">true</property>
+
+        <!-- Entity Mappings ======================================= -->
+    </session-factory>
+</hibernate-configuration>
