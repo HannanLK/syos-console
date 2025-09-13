@@ -103,6 +103,13 @@
             <version>${jakarta.validationapi.version}</version>
         </dependency>
 
+        <!-- Security: jBCrypt for password hashing -->
+        <dependency>
+            <groupId>org.mindrot</groupId>
+            <artifactId>jbcrypt</artifactId>
+            <version>${jbcrypt.version}</version>
+        </dependency>
+
         <!-- ====================== TESTING ======================== -->
 
         <!-- JUnit 5 (use junit-jupiter for all-in-one) -->

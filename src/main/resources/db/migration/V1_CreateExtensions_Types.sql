@@ -14,10 +14,3 @@ SET timezone = 'Asia/Colombo';
 -- =============================================================================
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
--- =============================================================================
--- ENUM TYPES
--- =============================================================================
-
--- User Role Enum
-CREATE TYPE user_role AS ENUM ('CUSTOMER', 'EMPLOYEE', 'ADMIN');
