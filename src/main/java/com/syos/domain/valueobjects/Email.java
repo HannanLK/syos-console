@@ -1,5 +1,6 @@
 package com.syos.domain.valueobjects;
 
+import com.syos.domain.exceptions.InvalidEmailException;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -12,11 +13,12 @@ public final class Email {
     }
 
     public static Email of(String value) {
-        if (value == null) throw new IllegalArgumentException("Email cannot be null");
+        if (value == null) throw new InvalidEmailException("Email cannot be null");
         String trimmed = value.trim();
-        if (trimmed.length() > 100) throw new IllegalArgumentException("Email must be at most 100 characters long");
+        if (trimmed.isEmpty()) throw new InvalidEmailException("Email cannot be blank");
+        if (trimmed.length() > 100) throw new InvalidEmailException("Email must be at most 100 characters long");
         if (!EMAIL_PATTERN.matcher(trimmed).matches()) {
-            throw new IllegalArgumentException("Invalid email format");
+            throw new InvalidEmailException("Invalid email format");
         }
         return new Email(trimmed);
     }

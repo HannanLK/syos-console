@@ -1,5 +1,6 @@
 package com.syos.domain.valueobjects;
 
+import com.syos.domain.exceptions.InvalidUsernameException;
 import java.util.Objects;
 
 public final class Username {
@@ -10,10 +11,12 @@ public final class Username {
     }
 
     public static Username of(String value) {
-        if (value == null) throw new IllegalArgumentException("Username cannot be null");
+        if (value == null) throw new InvalidUsernameException("Username cannot be null");
         String trimmed = value.trim();
-        if (trimmed.length() < 3) throw new IllegalArgumentException("Username must be at least 3 characters long");
-        if (trimmed.length() > 50) throw new IllegalArgumentException("Username must be at most 50 characters long");
+        if (trimmed.isEmpty()) throw new InvalidUsernameException("Username cannot be blank");
+        if (trimmed.length() < 3) throw new InvalidUsernameException("Username must be at least 3 characters long");
+        if (trimmed.length() > 50) throw new InvalidUsernameException("Username must be at most 50 characters long");
+        if (!trimmed.matches("[A-Za-z0-9_.-]+")) throw new InvalidUsernameException("Username may contain letters, digits, underscore, dot, and hyphen only");
         return new Username(trimmed);
     }
 
