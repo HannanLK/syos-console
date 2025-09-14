@@ -3,18 +3,19 @@ package com.syos.adapter.in.cli.session;
 import com.syos.domain.entities.User;
 import com.syos.shared.enums.UserRole;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
  * Represents an active user session
  */
 public class UserSession {
-    private final String userId;
+    private final Long userId; // may be null for unsaved users
     private final String username;
     private final String name;
     private final UserRole role;
     private final LocalDateTime loginTime;
-    private final double synexPoints;
+    private final BigDecimal synexPoints;
 
     public UserSession(User user) {
         this.userId = user.getId() != null ? user.getId().getValue() : null;
@@ -25,7 +26,7 @@ public class UserSession {
         this.synexPoints = user.getSynexPoints().getValue();
     }
 
-    public String getUserId() { 
+    public Long getUserId() { 
         return userId; 
     }
     
@@ -45,7 +46,7 @@ public class UserSession {
         return loginTime; 
     }
     
-    public double getSynexPoints() { 
+    public BigDecimal getSynexPoints() { 
         return synexPoints; 
     }
 }

@@ -8,11 +8,11 @@ import com.syos.shared.enums.UserRole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * In-memory implementation of UserRepository
@@ -22,7 +22,8 @@ public class InMemoryUserRepository implements UserRepository {
     private static final Logger logger = LoggerFactory.getLogger(InMemoryUserRepository.class);
     private final Map<String, User> usersByUsername = new HashMap<>();
     private final Map<String, User> usersByEmail = new HashMap<>();
-    private final Map<String, User> usersById = new HashMap<>();
+    private final Map<Long, User> usersById = new HashMap<>();
+    private long nextId = 1L;
 
     public InMemoryUserRepository() {
         initializeDefaultUsers();
@@ -37,9 +38,9 @@ public class InMemoryUserRepository implements UserRepository {
         try {
             // Admin user
             User admin = createUser(
-                "admin-001",
+                1L,
                 "admin",
-                encoder.encode("admin123"),
+                encoder.hash("admin123"),
                 "System Administrator",
                 "admin@syos.com",
                 UserRole.ADMIN,
@@ -49,9 +50,9 @@ public class InMemoryUserRepository implements UserRepository {
             
             // Employee user
             User employee = createUser(
-                "emp-001",
+                2L,
                 "employee",
-                encoder.encode("emp123"),
+                encoder.hash("emp123"),
                 "John Employee",
                 "employee@syos.com",
                 UserRole.EMPLOYEE,
@@ -61,9 +62,9 @@ public class InMemoryUserRepository implements UserRepository {
             
             // Customer user
             User customer = createUser(
-                "cust-001",
+                3L,
                 "customer",
-                encoder.encode("cust123"),
+                encoder.hash("cust123"),
                 "Jane Customer",
                 "customer@example.com",
                 UserRole.CUSTOMER,
@@ -71,6 +72,7 @@ public class InMemoryUserRepository implements UserRepository {
             );
             saveUser(customer);
             
+            nextId = 4L;
             logger.info("Initialized default users: admin, employee, customer");
             
         } catch (Exception e) {
@@ -78,7 +80,7 @@ public class InMemoryUserRepository implements UserRepository {
         }
     }
 
-    private User createUser(String id, String username, String hashedPassword, 
+    private User createUser(long id, String username, String hashedPassword, 
                            String name, String email, UserRole role, double points) {
         // Using reflection to create User with ID for default users
         try {
@@ -99,7 +101,7 @@ public class InMemoryUserRepository implements UserRepository {
                 role,
                 Name.of(name),
                 Email.of(email),
-                SynexPoints.of(points),
+                SynexPoints.of(BigDecimal.valueOf(points)),
                 ActiveStatus.active(),
                 CreatedAt.of(now),
                 UpdatedAt.of(now),
@@ -133,7 +135,7 @@ public class InMemoryUserRepository implements UserRepository {
         if (user.getId() == null) {
             // Create new user with generated ID using reflection
             try {
-                String newId = UUID.randomUUID().toString();
+                long newId = nextId++;
                 LocalDateTime now = LocalDateTime.now();
                 
                 var constructor = User.class.getDeclaredConstructor(
@@ -171,7 +173,7 @@ public class InMemoryUserRepository implements UserRepository {
     private void saveUser(User user) {
         String username = user.getUsername().getValue().toLowerCase();
         String email = user.getEmail().getValue().toLowerCase();
-        String id = user.getId().getValue();
+        long id = user.getId().getValue();
         
         usersByUsername.put(username, user);
         usersByEmail.put(email, user);
