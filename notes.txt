@@ -1,1 +1,9 @@
 src/main/java/com/syos/adapter/in/cli/menu/MenuFactory.java
+
+src/main/java/com/syos/application/ports/in/AuthenticationPort.java
+
+rc/main/java/com/syos/application/ports/out/UserRepository.java
+
+src/main/java/com/syos/application/usecases/auth/LoginUseCase.java
+
+src/main/java/com/syos/application/dto/requests/LoginRequest.java

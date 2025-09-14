@@ -1,27 +1,33 @@
 package com.syos.domain.valueobjects;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
-public final class MemberSince implements Comparable<MemberSince> {
-    private final LocalDate value;
+/**
+ * Value object for member since date
+ */
+public final class MemberSince {
+    private final LocalDateTime value;
 
-    private MemberSince(LocalDate value) { this.value = value; }
+    private MemberSince(LocalDateTime value) {
+        this.value = Objects.requireNonNull(value, "Member since date cannot be null");
+    }
 
-    public static MemberSince of(LocalDate value) {
-        if (value == null) throw new IllegalArgumentException("MemberSince cannot be null");
-        return new MemberSince(value);
+    public static MemberSince of(LocalDateTime dateTime) {
+        return new MemberSince(dateTime);
     }
 
     public static MemberSince fromCreatedAt(CreatedAt createdAt) {
-        Objects.requireNonNull(createdAt, "createdAt");
-        return new MemberSince(createdAt.getValue().toLocalDate());
+        return new MemberSince(createdAt.getValue());
     }
 
-    public LocalDate getValue() { return value; }
+    public static MemberSince now() {
+        return new MemberSince(LocalDateTime.now());
+    }
 
-    @Override
-    public String toString() { return value.toString(); }
+    public LocalDateTime getValue() {
+        return value;
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -31,8 +37,12 @@ public final class MemberSince implements Comparable<MemberSince> {
     }
 
     @Override
-    public int hashCode() { return Objects.hash(value); }
+    public int hashCode() {
+        return Objects.hash(value);
+    }
 
     @Override
-    public int compareTo(MemberSince o) { return this.value.compareTo(o.value); }
+    public String toString() {
+        return value.toString();
+    }
 }

@@ -50,19 +50,31 @@ public class User {
                                    String rawPassword,
                                    Name name,
                                    Email email) {
+        return createWithRole(username, rawPassword, name, email, UserRole.CUSTOMER, null);
+    }
+
+    /**
+     * Generic factory to create a user with the specified role.
+     */
+    public static User createWithRole(Username username,
+                                      String rawPassword,
+                                      Name name,
+                                      Email email,
+                                      UserRole role,
+                                      UserID createdBy) {
         Password hashed = Password.hash(rawPassword);
         LocalDateTime now = LocalDateTime.now();
         return new User(null,
                 username,
                 hashed,
-                UserRole.CUSTOMER,
+                role,
                 name,
                 email,
                 SynexPoints.zero(),
                 ActiveStatus.active(),
                 CreatedAt.of(now),
                 UpdatedAt.of(now),
-                null,
+                createdBy,
                 null);
     }
 
