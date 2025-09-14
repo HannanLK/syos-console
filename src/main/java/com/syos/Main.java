@@ -15,6 +15,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Main entry point for SYOS Console Application
@@ -24,11 +26,12 @@ public class Main {
 
     public static void main(String[] args) {
         logger.info("Starting SYOS Console Application");
-        // Ensure log directory exists based on LOG_HOME or default 'logs'
+        // Ensure the log directory exists based on LOG_HOME or default 'logs'
         try {
             String logHome = System.getProperty("LOG_HOME", "logs");
-            java.nio.file.Files.createDirectories(java.nio.file.Paths.get(logHome));
-            logger.info("Log directory: {}", java.nio.file.Paths.get(logHome).toAbsolutePath());
+            Path dir = Paths.get(logHome);
+            java.nio.file.Files.createDirectories(dir);
+            logger.info("Log directory: {}", dir.toAbsolutePath());
         } catch (Exception ex) {
             logger.warn("Could not ensure log directory exists", ex);
         }
@@ -52,7 +55,7 @@ public class Main {
             // Log initial information (no console output)
             logInitialInfo();
             
-            // Start application with the main menu
+            // Start an application with the main menu
             navigator.start(menuFactory.createMainMenu());
             
             logger.info("SYOS Console Application terminated normally");

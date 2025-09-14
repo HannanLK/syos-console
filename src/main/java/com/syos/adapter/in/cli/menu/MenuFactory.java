@@ -42,7 +42,7 @@ public class MenuFactory {
     }
 
     /**
-     * Create menu based on user role
+     * Create a menu based on a user role
      */
     public Menu createMenuForRole(UserRole role) {
         switch (role) {

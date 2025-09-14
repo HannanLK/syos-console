@@ -254,7 +254,6 @@
     <!-- ================================================================ -->
 
     <root level="${LOG_LEVEL}">
-        <appender-ref ref="CONSOLE"/>
         <appender-ref ref="ASYNC_APP_FILE"/>
         <appender-ref ref="ASYNC_ERROR_FILE"/>
     </root>
