@@ -2,6 +2,7 @@ package com.syos.adapter.in.cli.menu;
 
 import com.syos.adapter.in.cli.io.ConsoleIO;
 import com.syos.adapter.in.cli.session.SessionManager;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,9 +14,12 @@ import java.util.Stack;
 public class MenuNavigator {
     private static final Logger logger = LoggerFactory.getLogger(MenuNavigator.class);
     private final Stack<Menu> menuStack;
+    @Getter
     private final ConsoleIO console;
     private final MenuRenderer renderer;
+    @Getter
     private final SessionManager sessionManager;
+    @Getter
     private boolean running;
 
     public MenuNavigator(ConsoleIO console) {
@@ -91,15 +95,4 @@ public class MenuNavigator {
         logger.info("Menu navigator stopped");
     }
 
-    public boolean isRunning() {
-        return running;
-    }
-
-    public ConsoleIO getConsole() {
-        return console;
-    }
-
-    public SessionManager getSessionManager() {
-        return sessionManager;
-    }
 }

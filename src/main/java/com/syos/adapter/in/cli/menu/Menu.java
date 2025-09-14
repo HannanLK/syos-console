@@ -1,5 +1,7 @@
 package com.syos.adapter.in.cli.menu;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,8 +9,10 @@ import java.util.List;
  * Represents a menu with title and items
  */
 public class Menu {
+    @Getter
     private final String title;
     private final List<MenuItem> items;
+    @Getter
     private final String prompt;
 
     private Menu(Builder builder) {
@@ -17,16 +21,8 @@ public class Menu {
         this.prompt = builder.prompt != null ? builder.prompt : "Enter your choice: ";
     }
 
-    public String getTitle() { 
-        return title; 
-    }
-    
-    public List<MenuItem> getItems() { 
+    public List<MenuItem> getItems() {
         return new ArrayList<>(items); 
-    }
-    
-    public String getPrompt() { 
-        return prompt; 
     }
 
     public MenuItem findItem(String key) {

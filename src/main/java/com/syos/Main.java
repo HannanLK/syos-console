@@ -1,48 +1,104 @@
 package com.syos;
 
+import com.syos.adapter.in.cli.io.ConsoleIO;
+import com.syos.adapter.in.cli.io.StandardConsoleIO;
+import com.syos.adapter.in.cli.menu.MenuFactory;
+import com.syos.adapter.in.cli.menu.MenuNavigator;
+import com.syos.adapter.out.persistence.InMemoryUserRepository;
+import com.syos.application.ports.out.UserRepository;
+import com.syos.application.usecases.auth.LoginUseCase;
+import com.syos.application.usecases.auth.RegisterCustomerUseCase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Scanner;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+/**
+ * Main entry point for SYOS Console Application
+ */
 public class Main {
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
+
     public static void main(String[] args) {
-        DisplayWelcomeBanner();
-        DisplayMainMenu();
+        logger.info("Starting SYOS Console Application");
+        
+        try {
+            // Initialize infrastructure
+            ConsoleIO console = new StandardConsoleIO();
+            UserRepository userRepository = new InMemoryUserRepository();
+            
+            // Initialize use cases
+            LoginUseCase loginUseCase = new LoginUseCase(userRepository);
+            RegisterCustomerUseCase registerUseCase = new RegisterCustomerUseCase(userRepository);
+            
+            // Initialize menu system
+            MenuNavigator navigator = new MenuNavigator(console);
+            MenuFactory menuFactory = new MenuFactory(console, navigator, loginUseCase, registerUseCase);
+            
+            // Display welcome banner
+            displayWelcomeBanner(console);
+            
+            // Display initial information
+            displayInitialInfo(console);
+            
+            // Start application with the main menu
+            navigator.start(menuFactory.createMainMenu());
+            
+            logger.info("SYOS Console Application terminated normally");
+            
+        } catch (Exception e) {
+            logger.error("Fatal application error", e);
+            System.err.println("Fatal error: " + e.getMessage());
+            System.exit(1);
+        }
     }
 
-    private static void DisplayWelcomeBanner(){
+    private static void displayWelcomeBanner(ConsoleIO console) {
         try {
             InputStream inputStream = Main.class.getResourceAsStream("/static/banner.txt");
             if (inputStream != null) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    System.out.println(line);
+                    console.println(line);
                 }
                 reader.close();
             } else {
-                System.out.println("Banner file not found!");
+                // Fallback banner if file not found
+                displayFallbackBanner(console);
             }
         } catch (IOException e) {
-            System.out.println("Error reading banner file: " + e.getMessage());
+            logger.error("Error reading banner file", e);
+            displayFallbackBanner(console);
         }
     }
 
-    private static void DisplayMainMenu(){
-        Scanner scanner = new Scanner(System.in);
-
-        System.out.println("Main Menu:");
-        System.out.println("1. Browse Products");
-        System.out.println("2. Login");
-        System.out.println("3. Register");
-        System.out.println("4. Exit");
-        System.out.print("Enter Your Choice : ");
-
-        int choice = scanner.nextInt();
+    private static void displayFallbackBanner(ConsoleIO console) {
+        console.println("\n╔════════════════════════════════════════════════════════╗");
+        console.println("║                                                        ║");
+        console.println("║          WELCOME TO SYNEX OUTLET STORE                ║");
+        console.println("║            77 Hortan Pl, Colombo 07                   ║");
+        console.println("║                                                        ║");
+        console.println("║            A System by Hannanlk                       ║");
+        console.println("║                                                        ║");
+        console.println("╚════════════════════════════════════════════════════════╝");
     }
 
+    private static void displayInitialInfo(ConsoleIO console) {
+        console.println("\n═══════════════════════════════════════════════════════");
+        console.println("  System Ready - Please select an option from the menu");
+        console.println("═══════════════════════════════════════════════════════");
+        
+        // Display test account information for development
+        if (logger.isDebugEnabled()) {
+            console.println("\n[Development Mode - Test Accounts]");
+            console.println("Admin    : admin/admin123");
+            console.println("Employee : employee/emp123");
+            console.println("Customer : customer/cust123");
+            console.println("═══════════════════════════════════════════════════════");
+        }
+    }
 }
