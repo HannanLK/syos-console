@@ -31,9 +31,8 @@ public class LoginCommand implements Command {
 
     @Override
     public void execute() {
-        console.println("\n╔══════════════════════════════════════╗");
-        console.println("║           USER LOGIN                 ║");
-        console.println("╚══════════════════════════════════════╝");
+        console.println("\n User Login");
+        console.println("----------------------");
         
         console.print("\nUsername: ");
         String username = console.readLine();
@@ -52,11 +51,10 @@ public class LoginCommand implements Command {
             // Success message
             console.println();
             console.printSuccess("Login successful!");
-            console.println("\n╔══════════════════════════════════════╗");
-            console.println("║  Welcome back, " + padRight(user.getName().getValue(), 20) + " ║");
-            console.println("║  Role: " + padRight(user.getRole().toString(), 29) + " ║");
-            console.println("║  SYNEX Points: " + padRight(String.format("%.2f", user.getSynexPoints().getValue()), 21) + " ║");
-            console.println("╚══════════════════════════════════════╝");
+            console.println("  Welcome back, " + padRight(user.getName().getValue(), 20));
+            console.println("  Role: " + padRight(user.getRole().toString(), 29) );
+            console.println("  SYNEX Points: " + padRight(String.format("%.2f", user.getSynexPoints().getValue()), 21) + " ║");
+            console.println("-----------------------------------------");
             
             console.println("\nPress Enter to continue...");
             console.readLine();

@@ -22,10 +22,8 @@ public class RegisterCommand implements Command {
 
     @Override
     public void execute() {
-        console.println("\n╔══════════════════════════════════════╗");
-        console.println("║       CUSTOMER REGISTRATION          ║");
-        console.println("╚══════════════════════════════════════╝");
-        
+        console.println("\n CUSTOMER REGISTRATION");
+        console.println("----------------------");
         console.println("\nPlease provide the following information:");
         
         console.print("\nFull Name: ");

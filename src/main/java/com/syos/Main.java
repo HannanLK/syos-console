@@ -24,6 +24,14 @@ public class Main {
 
     public static void main(String[] args) {
         logger.info("Starting SYOS Console Application");
+        // Ensure log directory exists based on LOG_HOME or default 'logs'
+        try {
+            String logHome = System.getProperty("LOG_HOME", "logs");
+            java.nio.file.Files.createDirectories(java.nio.file.Paths.get(logHome));
+            logger.info("Log directory: {}", java.nio.file.Paths.get(logHome).toAbsolutePath());
+        } catch (Exception ex) {
+            logger.warn("Could not ensure log directory exists", ex);
+        }
         
         try {
             // Initialize infrastructure
@@ -41,8 +49,8 @@ public class Main {
             // Display welcome banner
             displayWelcomeBanner(console);
             
-            // Display initial information
-            displayInitialInfo(console);
+            // Log initial information (no console output)
+            logInitialInfo();
             
             // Start application with the main menu
             navigator.start(menuFactory.createMainMenu());
@@ -87,18 +95,12 @@ public class Main {
         console.println("╚════════════════════════════════════════════════════════╝");
     }
 
-    private static void displayInitialInfo(ConsoleIO console) {
-        console.println("\n═══════════════════════════════════════════════════════");
-        console.println("  System Ready - Please select an option from the menu");
-        console.println("═══════════════════════════════════════════════════════");
-        
-        // Display test account information for development
-        if (logger.isDebugEnabled()) {
-            console.println("\n[Development Mode - Test Accounts]");
-            console.println("Admin    : admin/admin123");
-            console.println("Employee : employee/emp123");
-            console.println("Customer : customer/cust123");
-            console.println("═══════════════════════════════════════════════════════");
-        }
+    private static void logInitialInfo() {
+        // Log system readiness and initialization details instead of printing to console
+        logger.info("System ready. Initializing components...");
+        logger.info("User repository initialized: InMemoryUserRepository");
+        logger.info("Menu system initialized");
+        // If/when database initialization is added, log success here instead of printing to console.
+        // Example: logger.info("Database initialized successfully");
     }
 }

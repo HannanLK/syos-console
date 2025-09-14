@@ -14,9 +14,8 @@ public class BrowseProductsCommand implements Command {
 
     @Override
     public void execute() {
-        console.println("\n╔══════════════════════════════════════╗");
-        console.println("║         BROWSE PRODUCTS              ║");
-        console.println("╚══════════════════════════════════════╝");
+        console.println("\n BROWSE PRODUCTS");
+        console.println("----------------------");
         console.println("\nProduct browsing feature coming soon...");
         console.println("\nPress Enter to continue...");
         console.readLine();

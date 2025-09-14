@@ -7,7 +7,7 @@
 
     <!-- System Properties -->
     <property name="APP_NAME" value="syos"/>
-    <property name="LOG_HOME" value="${LOG_HOME:-${user.home}/syos/logs}"/>
+    <property name="LOG_HOME" value="${LOG_HOME:-logs}"/>
     <property name="LOG_LEVEL" value="${LOG_LEVEL:-INFO}"/>
 
     <!-- Log Patterns -->
