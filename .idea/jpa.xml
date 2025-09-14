@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="JpaPluginProjectSettings" isShowLibraryClassesInOrmView="true" />
   <component name="PersistenceUnitSettings">
     <persistence-units>
       <persistence-unit moduleName="syos-console" name="db:hibernate.cfg.xml" framework="JPA" ormUnit="syos-console:db:hibernate.cfg.xml" defaultDataSourceId="31e88ae5-815e-4dad-b8c6-15ca9536cb6e" />

@@ -5,6 +5,7 @@
 -- =====================================================
 
 -- Create the user_role enum type if not exists
+
 DO $$ BEGIN
     CREATE TYPE user_role AS ENUM ('CUSTOMER', 'EMPLOYEE', 'ADMIN');
 EXCEPTION
