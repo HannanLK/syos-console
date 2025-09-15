@@ -87,9 +87,9 @@ public class Main {
             
             // Show repository type to user
             if (userRepository instanceof JpaUserRepository) {
-                console.println("🗄️ Connected to PostgreSQL database - data will persist permanently!");
+                console.println("Connected to PostgreSQL database - data will persist permanently!");
             } else {
-                console.println("⚠️  Using in-memory storage - data will be lost on restart!");
+                console.println("⚠️ Using in-memory storage - data will be lost on restart!");
             }
             console.println();
             

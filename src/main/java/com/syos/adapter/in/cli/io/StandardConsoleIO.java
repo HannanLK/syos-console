@@ -66,12 +66,12 @@ public class StandardConsoleIO implements ConsoleIO {
 
     @Override
     public void printError(String message) {
-        System.err.println("❌ ERROR: " + message);
+        System.err.println("ERROR: " + message);
     }
 
     @Override
     public void printSuccess(String message) {
-        System.out.println("✅ SUCCESS: " + message);
+        System.out.println("SUCCESS: " + message);
     }
 
     @Override

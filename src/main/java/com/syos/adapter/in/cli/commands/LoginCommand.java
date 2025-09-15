@@ -11,6 +11,9 @@ import com.syos.domain.entities.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 /**
  * Command to handle user login
  */
@@ -31,8 +34,9 @@ public class LoginCommand implements Command {
 
     @Override
     public void execute() {
-        console.println("\n User Login");
-        console.println("----------------------");
+        console.println("\n═══════════════════════════════════════");
+        console.println("              USER LOGIN");
+        console.println("═══════════════════════════════════════");
         
         console.print("\nUsername: ");
         String username = console.readLine();
@@ -48,13 +52,12 @@ public class LoginCommand implements Command {
             UserSession session = new UserSession(user);
             SessionManager.getInstance().createSession(session);
             
-            // Success message
+            // Success message  
             console.println();
             console.printSuccess("Login successful!");
-            console.println("  Welcome back, " + padRight(user.getName().getValue(), 20));
-            console.println("  Role: " + padRight(user.getRole().toString(), 29) );
-            console.println("  SYNEX Points: " + padRight(String.format("%.2f", user.getSynexPoints().getValue()), 21) + " ║");
-            console.println("-----------------------------------------");
+            
+            // Display user profile with greeting
+            displayUserProfile(user);
             
             console.println("\nPress Enter to continue...");
             console.readLine();
@@ -74,6 +77,37 @@ public class LoginCommand implements Command {
             console.println("\nPress Enter to continue...");
             console.readLine();
         }
+    }
+    
+    private void displayUserProfile(User user) {
+        // Time-based greeting
+        LocalDateTime now = LocalDateTime.now();
+        int hour = now.getHour();
+        String greeting;
+        if (hour < 12) {
+            greeting = "Good Morning";
+        } else if (hour < 17) {
+            greeting = "Good Afternoon";
+        } else {
+            greeting = "Good Evening";
+        }
+        
+        // Format member since date
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy");
+        String memberSince = user.getMemberSince().getValue().format(formatter);
+        
+        console.println("\n╔══════════════════════════════════════╗");
+        console.println("║           USER PROFILE                 ║");
+        console.println("╠══════════════════════════════════════╣");
+        console.println("║                                      ║");
+        console.println("║  " + greeting + ", " + padRight(user.getName().getValue() + "!", 32 - greeting.length()) + " ║");
+        console.println("║                                      ║");
+        console.println("║  Username: " + padRight(user.getUsername().getValue(), 25) + " ║");
+        console.println("║  Email: " + padRight(user.getEmail().getValue(), 28) + " ║");
+        console.println("║  Synex Points: " + padRight(String.format("%.2f", user.getSynexPoints().getValue()), 21) + " ║");
+        console.println("║  Member Since: " + padRight(memberSince, 21) + " ║");
+        console.println("║                                      ║");
+        console.println("╚══════════════════════════════════════╝");
     }
     
     private String padRight(String text, int length) {

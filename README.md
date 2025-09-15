@@ -27,6 +27,20 @@ src/main/java/com/syos/
 └── shared/              # Shared utilities and enums
 ```
 
+## Recent Improvements (Latest Update)
+
+### ✅ Enhanced User Experience Flow
+- **Seamless Registration**: Users are automatically logged in after successful registration
+- **Enhanced User Profile**: Professional profile display with time-based greetings
+- **Streamlined Navigation**: Simplified customer menu focused on core functions
+- **Improved Visual Design**: Better formatting and professional appearance
+
+### ✅ User Interface Enhancements
+- **Time-Based Greetings**: Dynamic greetings based on time of day (Morning/Afternoon/Evening)
+- **Professional Profile Display**: Formatted user information with member since date
+- **Clean Menu Structure**: Removed redundant options, focused on navigation
+- **Enhanced Login Flow**: Improved login header and user feedback
+
 ## Features Implemented
 
 ### ✅ Authentication System
@@ -127,14 +141,33 @@ The system comes with pre-configured test users:
 1. **Welcome Screen**: Shows welcome banner and main menu
 2. **Main Menu Options**:
    - Browse Products (guest access)
-   - Login (redirects based on role)
-   - Register (creates new customer account)
+   - Login (displays user profile, redirects based on role)
+   - Register (creates account + auto-login + user profile + customer dashboard)
    - Exit
 
-3. **Role-Based Access**:
-   - **Customer**: Browse products, view account info
+3. **Enhanced Registration Flow**:
+   - User provides registration details
+   - Account created successfully
+   - **Automatic login** (no manual login required)
+   - **User profile display** with time-based greeting
+   - **Direct navigation** to customer dashboard
+
+4. **Enhanced Login Flow**:
+   - Professional login interface
+   - **User profile display** after successful login
+   - Time-based personalized greeting
+   - Role-based dashboard access
+
+5. **Role-Based Access**:
+   - **Customer**: Browse products, view cart, order history (streamlined 4-option menu)
    - **Employee**: POS operations, inventory management
-   - **Admin**: All operations plus user management
+   - **Admin**: All operations plus user management (debug info removed)
+
+6. **User Profile Information** (displayed automatically after login/registration):
+   - Time-based greeting (Good Morning/Afternoon/Evening)
+   - Username and email
+   - Current Synex Points balance
+   - Member since date (formatted professionally)
 
 ## Testing
 

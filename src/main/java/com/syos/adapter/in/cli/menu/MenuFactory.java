@@ -38,9 +38,7 @@ public class MenuFactory {
             .addItem(new MenuItem("2", "Login", 
                 new LoginCommand(console, loginUseCase, navigator, this)))
             .addItem(new MenuItem("3", "Register", 
-                new RegisterCommand(console, registerUseCase)))
-            .addItem(new MenuItem("9", "Debug Info (DEV)", 
-                new DebugCommand(console, userRepository)))
+                new RegisterCommand(console, registerUseCase, navigator, this)))
             .addItem(new MenuItem("4", "Exit", 
                 new ExitCommand(console, navigator)))
             .prompt("Enter your choice: ")
@@ -68,18 +66,14 @@ public class MenuFactory {
      */
     private Menu createCustomerMenu() {
         return new Menu.Builder()
-            .title("CUSTOMER DASHBOARD")
+            .title("CUSTOMER NAVIGATION MENU")
             .addItem(new MenuItem("1", "Browse Products", 
                 new BrowseProductsCommand(console)))
             .addItem(new MenuItem("2", "View Cart", 
                 createPlaceholderCommand("Shopping Cart")))
             .addItem(new MenuItem("3", "Order History", 
                 createPlaceholderCommand("Order History")))
-            .addItem(new MenuItem("4", "View SYNEX Points", 
-                createPlaceholderCommand("SYNEX Points")))
-            .addItem(new MenuItem("5", "Account Information", 
-                createPlaceholderCommand("Account Information")))
-            .addItem(new MenuItem("L", "Logout", 
+            .addItem(new MenuItem("4", "Logout", 
                 new LogoutCommand(console, navigator, this)))
             .prompt("Enter your choice: ")
             .build();
@@ -131,8 +125,7 @@ public class MenuFactory {
                 createPlaceholderCommand("Add/Manage Users")))
             .addItem(new MenuItem("7", "View Sales/Insights", 
                 createPlaceholderCommand("Sales & Insights")))
-            .addItem(new MenuItem("9", "Debug Info (DEV)", 
-                new DebugCommand(console, userRepository)))
+
             .addItem(new MenuItem("L", "Logout", 
                 new LogoutCommand(console, navigator, this)))
             .prompt("Enter your choice: ")

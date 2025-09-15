@@ -1,11 +1,18 @@
 package com.syos.adapter.in.cli.commands;
 
 import com.syos.adapter.in.cli.io.ConsoleIO;
+import com.syos.adapter.in.cli.menu.MenuFactory;
+import com.syos.adapter.in.cli.menu.MenuNavigator;
+import com.syos.adapter.in.cli.session.SessionManager;
+import com.syos.adapter.in.cli.session.UserSession;
 import com.syos.application.exceptions.RegistrationException;
 import com.syos.application.usecases.auth.RegisterCustomerUseCase;
 import com.syos.domain.entities.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Command to handle customer registration
@@ -15,9 +22,15 @@ public class RegisterCommand implements Command {
     private final ConsoleIO console;
     private final RegisterCustomerUseCase registerUseCase;
 
-    public RegisterCommand(ConsoleIO console, RegisterCustomerUseCase registerUseCase) {
+    private final MenuNavigator navigator;
+    private final MenuFactory menuFactory;
+
+    public RegisterCommand(ConsoleIO console, RegisterCustomerUseCase registerUseCase, 
+                          MenuNavigator navigator, MenuFactory menuFactory) {
         this.console = console;
         this.registerUseCase = registerUseCase;
+        this.navigator = navigator;
+        this.menuFactory = menuFactory;
     }
 
     @Override
@@ -25,12 +38,12 @@ public class RegisterCommand implements Command {
         console.println("\n═══════════════════════════════════════");
         console.println("         CUSTOMER REGISTRATION");
         console.println("═══════════════════════════════════════");
-        console.println("\nPlease provide the following information:");
+        console.println("Please provide the following information:");
         
         console.print("\nFull Name: ");
         String name = console.readLine();
         
-        console.print("Username (3-20 characters, letters/numbers/_): ");
+        console.print("Username: ");
         String username = console.readLine();
         
         console.print("Email Address: ");
@@ -65,26 +78,66 @@ public class RegisterCommand implements Command {
             console.println("║  Username: " + padRight(user.getUsername().getValue(), 25) + " ║");
             console.println("║  Name: " + padRight(user.getName().getValue(), 29) + " ║");
             console.println("║  Email: " + padRight(user.getEmail().getValue(), 28) + " ║");
-            console.println("║  Role: " + padRight(user.getRole().toString(), 29) + " ║");
-            console.println("║  User ID: " + padRight(user.getId() != null ? String.valueOf(user.getId().getValue()) : "null", 26) + " ║");
             console.println("║                                      ║");
-            console.println("║  You can now login with your        ║");
-            console.println("║  credentials.                        ║");
+            console.println("║  Automatically logging you in...     ║");
             console.println("╚══════════════════════════════════════╝");
             
             logger.info("New customer registered: {}", username);
             
+            // Automatically log in the user
+            UserSession session = new UserSession(user);
+            SessionManager.getInstance().createSession(session);
+            
+            // Display user profile with greeting
+            displayUserProfile(user);
+            
+            console.println("\nPress Enter to continue to your dashboard...");
+            console.readLine();
+            
+            // Navigate to customer menu
+            navigator.clearMenuStack();
+            navigator.pushMenu(menuFactory.createMenuForRole(user.getRole()));
+            
         } catch (RegistrationException e) {
             console.printError("Registration Error: " + e.getMessage());
             logger.warn("Registration failed: {}", e.getMessage());
+            console.println("\nPress Enter to continue...");
+            console.readLine();
         } catch (Exception e) {
             console.printError("Registration failed: " + e.getMessage());
             logger.error("Unexpected registration error", e);
             e.printStackTrace(); // For debugging
+            console.println("\nPress Enter to continue...");
+            console.readLine();
+        }
+    }
+    
+    private void displayUserProfile(User user) {
+        // Time-based greeting
+        LocalDateTime now = LocalDateTime.now();
+        int hour = now.getHour();
+        String greeting;
+        if (hour < 12) {
+            greeting = "Good Morning";
+        } else if (hour < 17) {
+            greeting = "Good Afternoon";
+        } else {
+            greeting = "Good Evening";
         }
         
-        console.println("\nPress Enter to continue...");
-        console.readLine();
+        // Format member since date
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy");
+        String memberSince = user.getMemberSince().getValue().format(formatter);
+        console.println("\n═════════════════════════════════════════");
+        console.println("             USER PROFILE                ");
+        console.println("═════════════════════════════════════════");
+        console.println(greeting + ", " + padRight(user.getName().getValue() + "!", 32 - greeting.length()));
+        console.println();
+        console.println("  Username: " + padRight(user.getUsername().getValue(), 25));
+        console.println("  Email: " + padRight(user.getEmail().getValue(), 28));
+        console.println("  Synex Points: " + padRight(String.format("%.2f", user.getSynexPoints().getValue()), 21));
+        console.println("  Member Since: " + padRight(memberSince, 21));
+        console.println("═════════════════════════════════════════");
     }
     
     private String padRight(String text, int length) {
