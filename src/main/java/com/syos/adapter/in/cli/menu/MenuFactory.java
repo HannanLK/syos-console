@@ -2,6 +2,7 @@ package com.syos.adapter.in.cli.menu;
 
 import com.syos.adapter.in.cli.commands.*;
 import com.syos.adapter.in.cli.io.ConsoleIO;
+import com.syos.application.ports.out.UserRepository;
 import com.syos.application.usecases.auth.LoginUseCase;
 import com.syos.application.usecases.auth.RegisterCustomerUseCase;
 import com.syos.shared.enums.UserRole;
@@ -14,13 +15,16 @@ public class MenuFactory {
     private final MenuNavigator navigator;
     private final LoginUseCase loginUseCase;
     private final RegisterCustomerUseCase registerUseCase;
+    private final UserRepository userRepository;
 
     public MenuFactory(ConsoleIO console, MenuNavigator navigator,
-                      LoginUseCase loginUseCase, RegisterCustomerUseCase registerUseCase) {
+                      LoginUseCase loginUseCase, RegisterCustomerUseCase registerUseCase,
+                      UserRepository userRepository) {
         this.console = console;
         this.navigator = navigator;
         this.loginUseCase = loginUseCase;
         this.registerUseCase = registerUseCase;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -35,6 +39,8 @@ public class MenuFactory {
                 new LoginCommand(console, loginUseCase, navigator, this)))
             .addItem(new MenuItem("3", "Register", 
                 new RegisterCommand(console, registerUseCase)))
+            .addItem(new MenuItem("9", "Debug Info (DEV)", 
+                new DebugCommand(console, userRepository)))
             .addItem(new MenuItem("4", "Exit", 
                 new ExitCommand(console, navigator)))
             .prompt("Enter your choice: ")
@@ -125,6 +131,8 @@ public class MenuFactory {
                 createPlaceholderCommand("Add/Manage Users")))
             .addItem(new MenuItem("7", "View Sales/Insights", 
                 createPlaceholderCommand("Sales & Insights")))
+            .addItem(new MenuItem("9", "Debug Info (DEV)", 
+                new DebugCommand(console, userRepository)))
             .addItem(new MenuItem("L", "Logout", 
                 new LogoutCommand(console, navigator, this)))
             .prompt("Enter your choice: ")

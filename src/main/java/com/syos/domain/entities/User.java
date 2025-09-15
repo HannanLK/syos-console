@@ -20,6 +20,7 @@ public class User {
     private final UserID createdBy; // optional
     private final MemberSince memberSince;
 
+    // Private constructor for internal use
     private User(UserID id,
                  Username username,
                  Password password,
@@ -76,6 +77,35 @@ public class User {
                 UpdatedAt.of(now),
                 createdBy,
                 null);
+    }
+
+    /**
+     * Factory method to create a User with an ID (for repository use)
+     */
+    public static User withId(UserID id,
+                             Username username,
+                             Password password,
+                             UserRole role,
+                             Name name,
+                             Email email,
+                             SynexPoints synexPoints,
+                             ActiveStatus activeStatus,
+                             CreatedAt createdAt,
+                             UpdatedAt updatedAt,
+                             UserID createdBy,
+                             MemberSince memberSince) {
+        return new User(id, username, password, role, name, email, 
+                       synexPoints, activeStatus, createdAt, updatedAt, 
+                       createdBy, memberSince);
+    }
+
+    /**
+     * Create a new User instance with the provided ID (used when loading from storage)
+     */
+    public User withId(UserID newId) {
+        return new User(newId, username, password, role, name, email,
+                       synexPoints, activeStatus, createdAt, updatedAt,
+                       createdBy, memberSince);
     }
 
     public UserID getId() { return id; }

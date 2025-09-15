@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="SqlDialectMappings">
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/6ee6eb54-8317-4f69-a0a4-cd1721081bd0/console.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V1_CreateExtensions_Types.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V2_Create_UsersTable_With_Indexing.sql" dialect="PostgreSQL" />
     <file url="PROJECT" dialect="PostgreSQL" />

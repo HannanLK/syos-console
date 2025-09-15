@@ -68,6 +68,8 @@
             <version>${hibernate.version}</version>
         </dependency>
 
+
+
         <!-- HikariCP Connection Pool -->
         <dependency>
             <groupId>com.zaxxer</groupId>
@@ -81,6 +83,8 @@
             <artifactId>jakarta.persistence-api</artifactId>
             <version>${jakarta.persistence.version}</version>
         </dependency>
+
+
 
         <!-- Hibernate Validator (Bean Validation) -->
         <dependency>
@@ -192,12 +196,7 @@
 
         <!-- ========================== SECURITY =====================-->
 
-        <!-- jBCrypt for Password Hashing -->
-        <dependency>
-            <groupId>org.mindrot</groupId>
-            <artifactId>jbcrypt</artifactId>
-            <version>${jbcrypt.version}</version>
-        </dependency>
+
 
         <!-- ======================== PDF GENERATION ================= -->
 

@@ -22,8 +22,9 @@ public class RegisterCommand implements Command {
 
     @Override
     public void execute() {
-        console.println("\n CUSTOMER REGISTRATION");
-        console.println("----------------------");
+        console.println("\n═══════════════════════════════════════");
+        console.println("         CUSTOMER REGISTRATION");
+        console.println("═══════════════════════════════════════");
         console.println("\nPlease provide the following information:");
         
         console.print("\nFull Name: ");
@@ -50,6 +51,8 @@ public class RegisterCommand implements Command {
         }
         
         try {
+            console.println("\nProcessing registration...");
+            
             // Attempt registration
             User user = registerUseCase.register(username, password, name, email);
             
@@ -62,6 +65,8 @@ public class RegisterCommand implements Command {
             console.println("║  Username: " + padRight(user.getUsername().getValue(), 25) + " ║");
             console.println("║  Name: " + padRight(user.getName().getValue(), 29) + " ║");
             console.println("║  Email: " + padRight(user.getEmail().getValue(), 28) + " ║");
+            console.println("║  Role: " + padRight(user.getRole().toString(), 29) + " ║");
+            console.println("║  User ID: " + padRight(user.getId() != null ? String.valueOf(user.getId().getValue()) : "null", 26) + " ║");
             console.println("║                                      ║");
             console.println("║  You can now login with your        ║");
             console.println("║  credentials.                        ║");
@@ -70,11 +75,12 @@ public class RegisterCommand implements Command {
             logger.info("New customer registered: {}", username);
             
         } catch (RegistrationException e) {
-            console.printError(e.getMessage());
+            console.printError("Registration Error: " + e.getMessage());
             logger.warn("Registration failed: {}", e.getMessage());
         } catch (Exception e) {
             console.printError("Registration failed: " + e.getMessage());
             logger.error("Unexpected registration error", e);
+            e.printStackTrace(); // For debugging
         }
         
         console.println("\nPress Enter to continue...");

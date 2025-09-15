@@ -3,7 +3,6 @@ package com.syos.adapter.out.persistence;
 import com.syos.application.ports.out.UserRepository;
 import com.syos.domain.entities.User;
 import com.syos.domain.valueobjects.*;
-import com.syos.infrastructure.security.BCryptPasswordEncoder;
 import com.syos.shared.enums.UserRole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,45 +31,43 @@ public class InMemoryUserRepository implements UserRepository {
     /**
      * Initialize with default users for testing
      */
-    private void initializeDefaultUsers() {
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        
+    protected void initializeDefaultUsers() {
         try {
             // Admin user
-            User admin = createUser(
+            User admin = createDefaultUser(
                 1L,
                 "admin",
-                encoder.hash("admin123"),
+                Password.hash("admin12345"),
                 "System Administrator",
                 "admin@syos.com",
                 UserRole.ADMIN,
                 0.0
             );
-            saveUser(admin);
+            saveUserDirectly(admin);
             
             // Employee user
-            User employee = createUser(
+            User employee = createDefaultUser(
                 2L,
                 "employee",
-                encoder.hash("emp123"),
+                Password.hash("employee123"),
                 "John Employee",
                 "employee@syos.com",
                 UserRole.EMPLOYEE,
                 0.0
             );
-            saveUser(employee);
+            saveUserDirectly(employee);
             
             // Customer user
-            User customer = createUser(
+            User customer = createDefaultUser(
                 3L,
                 "customer",
-                encoder.hash("cust123"),
+                Password.hash("customer123"),
                 "Jane Customer",
                 "customer@example.com",
                 UserRole.CUSTOMER,
                 150.0
             );
-            saveUser(customer);
+            saveUserDirectly(customer);
             
             nextId = 4L;
             logger.info("Initialized default users: admin, employee, customer");
@@ -80,107 +77,134 @@ public class InMemoryUserRepository implements UserRepository {
         }
     }
 
-    private User createUser(long id, String username, String hashedPassword, 
-                           String name, String email, UserRole role, double points) {
-        // Using reflection to create User with ID for default users
-        try {
-            LocalDateTime now = LocalDateTime.now();
-            
-            // Get User constructor via reflection
-            var constructor = User.class.getDeclaredConstructor(
-                UserID.class, Username.class, Password.class, UserRole.class,
-                Name.class, Email.class, SynexPoints.class, ActiveStatus.class,
-                CreatedAt.class, UpdatedAt.class, UserID.class, MemberSince.class
-            );
-            constructor.setAccessible(true);
-            
-            return constructor.newInstance(
-                UserID.of(id),
-                Username.of(username),
-                Password.fromHash(hashedPassword),
-                role,
-                Name.of(name),
-                Email.of(email),
-                SynexPoints.of(BigDecimal.valueOf(points)),
-                ActiveStatus.active(),
-                CreatedAt.of(now),
-                UpdatedAt.of(now),
-                null, // createdBy
-                MemberSince.of(now)
-            );
-        } catch (Exception e) {
-            logger.error("Error creating user", e);
-            throw new RuntimeException("Failed to create user", e);
-        }
+    private User createDefaultUser(long id, String username, Password hashedPassword, 
+                                  String name, String email, UserRole role, double points) {
+        LocalDateTime now = LocalDateTime.now();
+        
+        return User.withId(
+            UserID.of(id),
+            Username.of(username),
+            hashedPassword,
+            role,
+            Name.of(name),
+            Email.of(email),
+            SynexPoints.of(BigDecimal.valueOf(points)),
+            ActiveStatus.active(),
+            CreatedAt.of(now),
+            UpdatedAt.of(now),
+            null, // createdBy
+            MemberSince.of(now)
+        );
     }
 
     @Override
     public Optional<User> findByUsername(String username) {
-        return Optional.ofNullable(usersByUsername.get(username.toLowerCase()));
+        if (username == null || username.trim().isEmpty()) {
+            logger.debug("findByUsername called with null or empty username");
+            return Optional.empty();
+        }
+        
+        User user = usersByUsername.get(username.toLowerCase());
+        if (user != null) {
+            logger.debug("Found user by username: {}", username);
+        } else {
+            logger.debug("User not found by username: {}", username);
+        }
+        return Optional.ofNullable(user);
     }
 
     @Override
     public boolean existsByUsername(String username) {
-        return usersByUsername.containsKey(username.toLowerCase());
+        if (username == null || username.trim().isEmpty()) {
+            logger.debug("existsByUsername called with null or empty username");
+            return false;
+        }
+        
+        boolean exists = usersByUsername.containsKey(username.toLowerCase());
+        logger.debug("Username '{}' exists: {}", username, exists);
+        return exists;
     }
 
     @Override
     public boolean existsByEmail(String email) {
-        return usersByEmail.containsKey(email.toLowerCase());
+        if (email == null || email.trim().isEmpty()) {
+            logger.debug("existsByEmail called with null or empty email");
+            return false;
+        }
+        
+        boolean exists = usersByEmail.containsKey(email.toLowerCase());
+        logger.debug("Email '{}' exists: {}", email, exists);
+        return exists;
     }
 
     @Override
-    public void save(User user) {
-        // Generate ID if null (for new users)
+    public User save(User user) {
+        if (user == null) {
+            logger.error("Cannot save null user");
+            throw new IllegalArgumentException("User cannot be null");
+        }
+        
+        User savedUser;
+        // If user doesn't have an ID, generate one and create a new user instance with the ID
         if (user.getId() == null) {
-            // Create new user with generated ID using reflection
-            try {
-                long newId = nextId++;
-                LocalDateTime now = LocalDateTime.now();
-                
-                var constructor = User.class.getDeclaredConstructor(
-                    UserID.class, Username.class, Password.class, UserRole.class,
-                    Name.class, Email.class, SynexPoints.class, ActiveStatus.class,
-                    CreatedAt.class, UpdatedAt.class, UserID.class, MemberSince.class
-                );
-                constructor.setAccessible(true);
-                
-                user = constructor.newInstance(
-                    UserID.of(newId),
-                    user.getUsername(),
-                    user.getPassword(),
-                    user.getRole(),
-                    user.getName(),
-                    user.getEmail(),
-                    user.getSynexPoints(),
-                    user.getActiveStatus(),
-                    user.getCreatedAt(),
-                    user.getUpdatedAt(),
-                    user.getCreatedBy(),
-                    user.getMemberSince()
-                );
-            } catch (Exception e) {
-                logger.error("Error saving user with generated ID", e);
-                throw new RuntimeException("Failed to save user", e);
+            long newId = nextId++;
+            savedUser = user.withId(UserID.of(newId));
+            saveUserDirectly(savedUser);
+            logger.info("Saved new user: {} with ID: {} and role: {}", 
+                savedUser.getUsername().getValue(), newId, savedUser.getRole());
+        } else {
+            savedUser = user;
+            saveUserDirectly(savedUser);
+            logger.info("Updated existing user: {} with role: {}", 
+                savedUser.getUsername().getValue(), savedUser.getRole());
+        }
+        
+        return savedUser;
+    }
+    
+    private void saveUserDirectly(User user) {
+        if (user == null || user.getUsername() == null || user.getEmail() == null) {
+            logger.error("Cannot save user: user or required fields are null");
+            return;
+        }
+        
+        String username = user.getUsername().getValue().toLowerCase();
+        String email = user.getEmail().getValue().toLowerCase();
+        
+        // Remove old mappings if updating existing user
+        if (user.getId() != null) {
+            User existingUser = usersById.get(user.getId().getValue());
+            if (existingUser != null) {
+                usersByUsername.remove(existingUser.getUsername().getValue().toLowerCase());
+                usersByEmail.remove(existingUser.getEmail().getValue().toLowerCase());
             }
         }
         
-        saveUser(user);
-        logger.info("Saved user: {} with role: {}", 
-            user.getUsername().getValue(), user.getRole());
-    }
-    
-    private void saveUser(User user) {
-        String username = user.getUsername().getValue().toLowerCase();
-        String email = user.getEmail().getValue().toLowerCase();
-        long id = user.getId().getValue();
-        
+        // Add new mappings
         usersByUsername.put(username, user);
         usersByEmail.put(email, user);
-        usersById.put(id, user);
+        if (user.getId() != null) {
+            usersById.put(user.getId().getValue(), user);
+        }
+        
+        logger.debug("User mappings updated - Username: {}, Email: {}, ID: {}", 
+            username, email, user.getId() != null ? user.getId().getValue() : "null");
     }
     
     public int getUserCount() {
         return usersById.size();
+    }
+    
+    public void printAllUsers() {
+        logger.info("=== All Users in Repository ===");
+        logger.info("Total users: {}", usersById.size());
+        for (User user : usersById.values()) {
+            logger.info("ID: {}, Username: {}, Email: {}, Role: {}", 
+                user.getId().getValue(),
+                user.getUsername().getValue(),
+                user.getEmail().getValue(),
+                user.getRole());
+        }
+        logger.info("============================");
     }
 }

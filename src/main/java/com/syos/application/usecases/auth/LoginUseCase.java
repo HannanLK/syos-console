@@ -42,7 +42,24 @@ public class LoginUseCase {
         
         try {
             // Create username value object
-            Username u = Username.of(username);
+            Username u = Username.of(username.trim());
+            
+            logger.debug("Looking up user with username: {}", u.getValue());
+            
+            // Check if user exists first
+            if (!userRepository.existsByUsername(u.getValue())) {
+                logger.warn("Login failed: Username not found in repository - {}", username);
+                
+                // Debug: Print all users if this is development and repository supports it
+                try {
+                    java.lang.reflect.Method printMethod = userRepository.getClass().getMethod("printAllUsers");
+                    printMethod.invoke(userRepository);
+                } catch (Exception ignored) {
+                    // Method not available - that's OK
+                }
+                
+                throw new AuthenticationException("Invalid username or password");
+            }
             
             // Find user
             Optional<User> userOpt = userRepository.findByUsername(u.getValue());
@@ -53,6 +70,8 @@ public class LoginUseCase {
             }
             
             User user = userOpt.get();
+            
+            logger.debug("Found user: {} with role: {}", user.getUsername().getValue(), user.getRole());
             
             // Check password
             if (!user.getPassword().matches(password)) {
