@@ -4,7 +4,7 @@
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
--- BATCHES TABLE (Tracks incoming stock with expiry dates)
+-- 16 BATCHES TABLE (Tracks incoming stock with expiry dates)
 -- -----------------------------------------------------------------------------
 CREATE TABLE batches (
     id BIGSERIAL PRIMARY KEY,
@@ -47,7 +47,7 @@ CREATE TABLE batches (
 );
 
 -- -----------------------------------------------------------------------------
--- LOCATIONS TABLE (Physical locations for stock)
+-- 17 LOCATIONS TABLE (Physical locations for stock)
 -- -----------------------------------------------------------------------------
 CREATE TABLE locations (
     id BIGSERIAL PRIMARY KEY,
@@ -67,7 +67,7 @@ CREATE TABLE locations (
 );
 
 -- -----------------------------------------------------------------------------
--- STOCK TABLE (Current stock levels at different locations)
+-- 18 STOCK TABLE (Current stock levels at different locations)
 -- -----------------------------------------------------------------------------
 CREATE TABLE stock (
     id BIGSERIAL PRIMARY KEY,
@@ -100,7 +100,7 @@ CREATE TABLE stock (
 );
 
 -- -----------------------------------------------------------------------------
--- STOCK_MOVEMENTS TABLE (Audit trail for all stock changes)
+-- 19 STOCK_MOVEMENTS TABLE (Audit trail for all stock changes)
 -- -----------------------------------------------------------------------------
 CREATE TABLE stock_movements (
     id BIGSERIAL PRIMARY KEY,

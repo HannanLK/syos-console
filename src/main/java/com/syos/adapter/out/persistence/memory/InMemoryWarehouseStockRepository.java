@@ -64,6 +64,19 @@ public class InMemoryWarehouseStockRepository implements WarehouseStockRepositor
         metaByBatch.putIfAbsent(batchId, new BatchMeta(batchId, LocalDate.now(), null));
     }
 
+    @Override
+    public void addStock(long itemId, long batchId, BigDecimal quantity) {
+        receiveToWarehouse(itemId, batchId, quantity);
+    }
+
+    @Override
+    public BigDecimal getTotalAvailableStock(long itemId) {
+        return qtyByItemBatch.getOrDefault(itemId, Collections.emptyMap())
+            .values()
+            .stream()
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
     // Test helper
     public Map<Long, BigDecimal> getLastAllocation() { return lastAllocation; }
     public BigDecimal getWarehouseQty(long itemId, long batchId) {

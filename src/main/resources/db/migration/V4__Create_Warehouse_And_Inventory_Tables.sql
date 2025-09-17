@@ -4,7 +4,7 @@
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
--- LOCATIONS TABLE (For warehouses, shelves, web inventory)
+-- 7 LOCATIONS TABLE (For warehouses, shelves, web inventory)
 -- -----------------------------------------------------------------------------
 CREATE TABLE locations (
     id BIGSERIAL PRIMARY KEY,
@@ -23,7 +23,7 @@ CREATE TABLE locations (
 );
 
 -- -----------------------------------------------------------------------------
--- ITEM_MASTER_FILE TABLE (Product catalog)
+-- 8 ITEM_MASTER_FILE TABLE (Product catalog)
 -- -----------------------------------------------------------------------------
 CREATE TABLE item_master_file (
     id BIGSERIAL PRIMARY KEY,
@@ -59,7 +59,7 @@ CREATE TABLE item_master_file (
 );
 
 -- -----------------------------------------------------------------------------
--- BATCHES TABLE (Track product batches with expiry)
+-- 9 BATCHES TABLE (Track product batches with expiry)
 -- -----------------------------------------------------------------------------
 CREATE TABLE batches (
     id BIGSERIAL PRIMARY KEY,
@@ -84,7 +84,7 @@ CREATE TABLE batches (
 );
 
 -- -----------------------------------------------------------------------------
--- WAREHOUSE_STOCK TABLE (Warehouse inventory with batch tracking)
+-- 10 WAREHOUSE_STOCK TABLE (Warehouse inventory with batch tracking)
 -- -----------------------------------------------------------------------------
 CREATE TABLE warehouse_stock (
     id BIGSERIAL PRIMARY KEY,
@@ -123,7 +123,7 @@ BEFORE INSERT OR UPDATE ON warehouse_stock
 FOR EACH ROW EXECUTE FUNCTION validate_warehouse_location();
 
 -- -----------------------------------------------------------------------------
--- SHELF_STOCK TABLE (Store shelf inventory)
+-- 11 SHELF_STOCK TABLE (Store shelf inventory)
 -- -----------------------------------------------------------------------------
 CREATE TABLE shelf_stock (
     id BIGSERIAL PRIMARY KEY,
@@ -162,7 +162,7 @@ BEFORE INSERT OR UPDATE ON shelf_stock
 FOR EACH ROW EXECUTE FUNCTION validate_shelf_location();
 
 -- -----------------------------------------------------------------------------
--- WEB_INVENTORY TABLE (Web/Online inventory)
+-- 12 WEB_INVENTORY TABLE (Web/Online inventory)
 -- -----------------------------------------------------------------------------
 CREATE TABLE web_inventory (
     id BIGSERIAL PRIMARY KEY,
@@ -198,7 +198,7 @@ BEFORE INSERT OR UPDATE ON web_inventory
 FOR EACH ROW EXECUTE FUNCTION validate_web_location();
 
 -- -----------------------------------------------------------------------------
--- STOCK_TRANSFERS TABLE (Track movements between locations)
+-- 13 STOCK_TRANSFERS TABLE (Track movements between locations)
 -- -----------------------------------------------------------------------------
 CREATE TABLE stock_transfers (
     id BIGSERIAL PRIMARY KEY,
@@ -231,7 +231,7 @@ CREATE TABLE stock_transfers (
 );
 
 -- -----------------------------------------------------------------------------
--- STOCK_MOVEMENTS TABLE (Audit trail for all stock changes)
+-- 14 STOCK_MOVEMENTS TABLE (Audit trail for all stock changes)
 -- -----------------------------------------------------------------------------
 CREATE TABLE stock_movements (
     id BIGSERIAL PRIMARY KEY,
@@ -256,7 +256,7 @@ CREATE TABLE stock_movements (
 );
 
 -- -----------------------------------------------------------------------------
--- NOTIFICATIONS TABLE
+-- 15 NOTIFICATIONS TABLE
 -- -----------------------------------------------------------------------------
 CREATE TABLE notifications (
     id BIGSERIAL PRIMARY KEY,

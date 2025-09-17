@@ -16,6 +16,14 @@ public class InMemoryWebInventoryRepository implements WebInventoryRepository {
         qtyByItemBatch.computeIfAbsent(itemId, k -> new HashMap<>()).merge(batchId, quantity, BigDecimal::add);
     }
 
+    @Override
+    public BigDecimal getCurrentStock(long itemId) {
+        return qtyByItemBatch.getOrDefault(itemId, Collections.emptyMap())
+            .values()
+            .stream()
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
     // Test helper
     public BigDecimal getWebQty(long itemId, long batchId) {
         return qtyByItemBatch.getOrDefault(itemId, Collections.emptyMap()).getOrDefault(batchId, BigDecimal.ZERO);

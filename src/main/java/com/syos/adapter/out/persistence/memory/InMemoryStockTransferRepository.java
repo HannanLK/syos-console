@@ -24,6 +24,14 @@ public class InMemoryStockTransferRepository implements StockTransferRepository 
         records.add(new TransferRecord(itemId, batchId, fromLocation, toLocation, referenceCode));
     }
 
+    @Override
+    public boolean hasTransferRecord(long itemId, String fromLocation, String toLocation) {
+        return records.stream()
+            .anyMatch(r -> r.itemId == itemId && 
+                          r.fromLocation.equals(fromLocation) && 
+                          r.toLocation.equals(toLocation));
+    }
+
     // Test helper
     public List<TransferRecord> getRecords() { return records; }
 }

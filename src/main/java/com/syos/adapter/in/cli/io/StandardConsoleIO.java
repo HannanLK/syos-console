@@ -36,6 +36,14 @@ public class StandardConsoleIO implements ConsoleIO {
     }
 
     @Override
+    public String readLine(String prompt) {
+        if (prompt != null && !prompt.isEmpty()) {
+            System.out.print(prompt);
+        }
+        return scanner.nextLine();
+    }
+
+    @Override
     public String readPassword() {
         if (console != null) {
             char[] passwordChars = console.readPassword();
@@ -45,6 +53,11 @@ public class StandardConsoleIO implements ConsoleIO {
             System.out.print("(Warning: Password will be visible) ");
             return scanner.nextLine();
         }
+    }
+
+    @Override
+    public void printf(String format, Object... args) {
+        System.out.printf(format, args);
     }
 
     @Override

@@ -4,7 +4,7 @@
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
--- PROMOTIONS TABLE
+-- 20 PROMOTIONS TABLE
 -- -----------------------------------------------------------------------------
 CREATE TABLE promotions (
     id BIGSERIAL PRIMARY KEY,
@@ -29,7 +29,7 @@ CREATE TABLE promotions (
 );
 
 -- -----------------------------------------------------------------------------
--- PROMOTION_ITEMS JUNCTION TABLE
+-- 21 PROMOTION_ITEMS JUNCTION TABLE
 -- -----------------------------------------------------------------------------
 CREATE TABLE promotion_items (
     promotion_id BIGINT NOT NULL,
@@ -41,7 +41,7 @@ CREATE TABLE promotion_items (
 );
 
 -- -----------------------------------------------------------------------------
--- TRANSACTIONS TABLE (Supports both POS and WEB transactions)
+-- 22 TRANSACTIONS TABLE (Supports both POS and WEB transactions)
 -- -----------------------------------------------------------------------------
 CREATE TABLE transactions (
     id BIGSERIAL PRIMARY KEY,
@@ -80,7 +80,7 @@ CREATE TABLE transactions (
 );
 
 -- -----------------------------------------------------------------------------
--- TRANSACTION_ITEMS TABLE
+-- 23 TRANSACTION_ITEMS TABLE
 -- -----------------------------------------------------------------------------
 CREATE TABLE transaction_items (
     id BIGSERIAL PRIMARY KEY,
@@ -102,7 +102,7 @@ CREATE TABLE transaction_items (
 );
 
 -- -----------------------------------------------------------------------------
--- BILLS TABLE
+-- 24 BILLS TABLE
 -- -----------------------------------------------------------------------------
 CREATE TABLE bills (
     id BIGSERIAL PRIMARY KEY,
@@ -118,44 +118,7 @@ CREATE TABLE bills (
 );
 
 -- -----------------------------------------------------------------------------
--- RETURNS TABLE
--- -----------------------------------------------------------------------------
-CREATE TABLE returns (
-    id BIGSERIAL PRIMARY KEY,
-    return_number VARCHAR(50) UNIQUE NOT NULL,
-    original_transaction_id BIGINT NOT NULL,
-    return_transaction_id BIGINT,
-    return_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    return_reason TEXT NOT NULL,
-    approved_by BIGINT,
-    status VARCHAR(20) DEFAULT 'PENDING',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (original_transaction_id) REFERENCES transactions(id) ON DELETE RESTRICT,
-    FOREIGN KEY (return_transaction_id) REFERENCES transactions(id) ON DELETE SET NULL,
-    FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL
-);
-
--- -----------------------------------------------------------------------------
--- RETURN_ITEMS TABLE
--- -----------------------------------------------------------------------------
-CREATE TABLE return_items (
-    id BIGSERIAL PRIMARY KEY,
-    return_id BIGINT NOT NULL,
-    item_id BIGINT NOT NULL,
-    quantity DECIMAL(10, 3) NOT NULL,
-    refund_amount DECIMAL(10, 2) NOT NULL,
-    restocking_fee DECIMAL(10, 2) DEFAULT 0,
-    condition VARCHAR(50),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (return_id) REFERENCES returns(id) ON DELETE CASCADE,
-    FOREIGN KEY (item_id) REFERENCES item_master_file(id) ON DELETE RESTRICT,
-    CONSTRAINT chk_return_quantity CHECK (quantity > 0),
-    CONSTRAINT chk_refund CHECK (refund_amount >= 0)
-);
-
--- -----------------------------------------------------------------------------
--- CARTS TABLE (For web transactions)
+-- 27 CARTS TABLE (For web transactions)
 -- -----------------------------------------------------------------------------
 CREATE TABLE carts (
     id BIGSERIAL PRIMARY KEY,
@@ -169,7 +132,7 @@ CREATE TABLE carts (
 );
 
 -- -----------------------------------------------------------------------------
--- CART_ITEMS TABLE
+-- 28 CART_ITEMS TABLE
 -- -----------------------------------------------------------------------------
 CREATE TABLE cart_items (
     id BIGSERIAL PRIMARY KEY,
@@ -185,7 +148,7 @@ CREATE TABLE cart_items (
 );
 
 -- -----------------------------------------------------------------------------
--- LOYALTY_TRANSACTIONS TABLE
+-- 29 LOYALTY_TRANSACTIONS TABLE
 -- -----------------------------------------------------------------------------
 CREATE TABLE loyalty_transactions (
     id BIGSERIAL PRIMARY KEY,
@@ -217,9 +180,6 @@ CREATE INDEX idx_bills_transaction ON bills(transaction_id);
 CREATE INDEX idx_bills_number ON bills(bill_number);
 CREATE INDEX idx_bills_date ON bills(bill_date);
 
-CREATE INDEX idx_returns_original ON returns(original_transaction_id);
-CREATE INDEX idx_returns_date ON returns(return_date);
-
 CREATE INDEX idx_carts_user ON carts(user_id);
 CREATE INDEX idx_carts_active ON carts(is_active) WHERE is_active = true;
 
@@ -233,9 +193,6 @@ CREATE TRIGGER update_promotions_updated_at BEFORE UPDATE ON promotions
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_transactions_updated_at BEFORE UPDATE ON transactions
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_returns_updated_at BEFORE UPDATE ON returns
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_carts_updated_at BEFORE UPDATE ON carts

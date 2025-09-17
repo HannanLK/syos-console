@@ -7,10 +7,7 @@ import com.syos.infrastructure.persistence.entities.ItemMasterFileEntity;
 import com.syos.shared.enums.ProductStatus;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
-import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
-import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,12 +24,13 @@ import java.util.stream.Collectors;
  * Adapter Pattern (Pattern #11):
  * - Adapts JPA EntityManager to domain repository interface
  */
-@Repository
-@Transactional
 public class JpaItemMasterFileRepository implements ItemMasterFileRepository {
     
-    @PersistenceContext
-    private EntityManager entityManager;
+    private final EntityManager entityManager;
+
+    public JpaItemMasterFileRepository(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
 
     @Override
     public ItemMasterFile save(ItemMasterFile item) {

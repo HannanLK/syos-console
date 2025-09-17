@@ -4,7 +4,7 @@
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
--- SUPPLIERS TABLE
+-- 2 SUPPLIERS TABLE
 -- -----------------------------------------------------------------------------
 CREATE TABLE suppliers (
     id BIGSERIAL PRIMARY KEY,
@@ -24,7 +24,7 @@ CREATE TABLE suppliers (
 );
 
 -- -----------------------------------------------------------------------------
--- BRANDS TABLE
+-- 3 BRANDS TABLE
 -- -----------------------------------------------------------------------------
 CREATE TABLE brands (
     id BIGSERIAL PRIMARY KEY,
@@ -37,7 +37,7 @@ CREATE TABLE brands (
 );
 
 -- -----------------------------------------------------------------------------
--- BRAND_SUPPLIER JUNCTION TABLE
+-- 4 BRAND_SUPPLIER JUNCTION TABLE
 -- -----------------------------------------------------------------------------
 CREATE TABLE brand_suppliers (
     brand_id BIGINT NOT NULL,
@@ -50,7 +50,7 @@ CREATE TABLE brand_suppliers (
 );
 
 -- -----------------------------------------------------------------------------
--- CATEGORIES TABLE (Self-referencing for hierarchy)
+-- 5 CATEGORIES TABLE (Self-referencing for hierarchy)
 -- -----------------------------------------------------------------------------
 CREATE TABLE categories (
     id BIGSERIAL PRIMARY KEY,

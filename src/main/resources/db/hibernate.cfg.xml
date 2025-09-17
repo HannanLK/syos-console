@@ -71,5 +71,6 @@
 
         <!-- Entity Mappings ======================================= -->
         <mapping class="com.syos.infrastructure.persistence.UserEntity"/>
+        <mapping class="com.syos.infrastructure.persistence."
     </session-factory>
 </hibernate-configuration>
