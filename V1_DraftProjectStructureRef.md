@@ -19,8 +19,6 @@ src/main/java/com/syos/domain/
 │   ├── Supplier.java
 │   ├── Cart.java
 │   ├── CartItem.java
-│   ├── Return.java
-│   ├── ReturnItem.java
 │   ├── Promotion.java
 │   ├── Notification.java
 │   └── LoyaltyAccount.java
