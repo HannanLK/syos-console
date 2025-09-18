@@ -9,6 +9,13 @@
         <!-- Entity Classes -->
         <class>com.syos.infrastructure.persistence.UserEntity</class>
         <class>com.syos.infrastructure.persistence.entities.ItemMasterFileEntity</class>
+        <class>com.syos.infrastructure.persistence.entities.BrandEntity</class>
+        <class>com.syos.infrastructure.persistence.entities.CategoryEntity</class>
+        <class>com.syos.infrastructure.persistence.entities.SupplierEntity</class>
+        <class>com.syos.infrastructure.persistence.entities.BatchEntity</class>
+        <class>com.syos.infrastructure.persistence.entities.WarehouseStockEntity</class>
+        <class>com.syos.infrastructure.persistence.entities.ShelfStockEntity</class>
+        <class>com.syos.infrastructure.persistence.entities.WebInventoryEntity</class>
         
         <properties>
             <!-- Database Connection Properties -->
@@ -20,9 +27,9 @@
             <!-- Hibernate Properties -->
             <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
             <property name="hibernate.hbm2ddl.auto" value="validate"/>
-            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.show_sql" value="false"/>
             <property name="hibernate.format_sql" value="true"/>
-            <property name="hibernate.use_sql_comments" value="true"/>
+            <property name="hibernate.use_sql_comments" value="false"/>
             
             <!-- Connection Pool Properties -->
             <property name="hibernate.connection.pool_size" value="10"/>
@@ -39,6 +46,9 @@
             
             <!-- Schema Validation -->
             <property name="jakarta.persistence.schema-generation.database.action" value="none"/>
+            
+            <!-- Timezone -->
+            <property name="hibernate.jdbc.time_zone" value="Asia/Colombo"/>
         </properties>
     </persistence-unit>
 </persistence>

@@ -53,6 +53,15 @@ public class SessionManager {
         return hasRole(UserRole.ADMIN);
     }
 
+    // Convenience methods used by controllers
+    public UserRole getCurrentUserRole() {
+        return isLoggedIn() ? currentSession.getRole() : null;
+    }
+
+    public Long getCurrentUserId() {
+        return isLoggedIn() ? currentSession.getUserId() : null;
+    }
+
     public void clearSession() {
         if (currentSession != null) {
             logger.info("Session cleared for user: {}", currentSession.getUsername());

@@ -21,19 +21,27 @@ public final class Quantity implements Comparable<Quantity> {
 
     public static Quantity zero() { return new Quantity(BigDecimal.ZERO); }
 
+    // Backward-compatibility helpers expected by some domain entities
+    public BigDecimal getValue() { return value; }
     public BigDecimal toBigDecimal() { return value; }
 
     public boolean isZero() { return value.compareTo(BigDecimal.ZERO) == 0; }
+    public boolean isNegative() { return value.compareTo(BigDecimal.ZERO) < 0; }
+    public boolean isZeroOrNegative() { return value.compareTo(BigDecimal.ZERO) <= 0; }
+    public boolean isGreaterThan(Quantity other) { return this.compareTo(other) > 0; }
+    public boolean isLessThan(Quantity other) { return this.compareTo(other) < 0; }
 
     public Quantity min(Quantity other) { return new Quantity(value.min(other.value)); }
 
     public Quantity plus(Quantity other) { return new Quantity(value.add(other.value)); }
+    public Quantity add(Quantity other) { return plus(other); }
 
     public Quantity minus(Quantity other) {
         BigDecimal v = value.subtract(other.value);
         if (v.compareTo(BigDecimal.ZERO) < 0) throw new IllegalArgumentException("Quantity result cannot be negative");
         return new Quantity(v);
     }
+    public Quantity subtract(Quantity other) { return minus(other); }
 
     @Override
     public int compareTo(Quantity o) { return value.compareTo(o.value); }

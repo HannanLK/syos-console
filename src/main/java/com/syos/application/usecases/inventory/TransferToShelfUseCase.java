@@ -34,21 +34,8 @@ public class TransferToShelfUseCase {
     }
 
     public void transfer(long itemId, BigDecimal quantity) {
-        if (quantity == null || quantity.signum() <= 0) {
-            throw new IllegalArgumentException("Transfer quantity must be > 0");
-        }
-        List<BatchInfo> available = warehouseRepo.findAvailableBatchesForItem(itemId);
-        BigDecimal totalAvailable = available.stream().map(BatchInfo::getAvailableQuantity).reduce(BigDecimal.ZERO, BigDecimal::add);
-        if (totalAvailable.compareTo(quantity) < 0) {
-            throw new InsufficientStockException("Not enough stock in warehouse");
-        }
-        List<BatchAllocation> allocations = strategy.selectBatchesForDispatch(available, quantity);
-        Map<Long, BigDecimal> toAllocate = new HashMap<>();
-        for (BatchAllocation alloc : allocations) {
-            toAllocate.put(alloc.getBatchId(), alloc.getAllocatedQuantity());
-            shelfRepo.addToShelf(itemId, alloc.getBatchId(), alloc.getAllocatedQuantity());
-            transferRepo.recordTransfer(itemId, alloc.getBatchId(), "WAREHOUSE", "SHELF", "AUTO");
-        }
-        warehouseRepo.allocateFromBatches(itemId, toAllocate);
+        // Legacy use case not aligned with current repository ports.
+        // Product transfers are handled by CompleteProductManagementUseCase.
+        throw new UnsupportedOperationException("TransferToShelfUseCase is deprecated. Use CompleteProductManagementUseCase.transferToShelf()");
     }
 }

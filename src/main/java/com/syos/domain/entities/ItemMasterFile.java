@@ -116,10 +116,14 @@ public class ItemMasterFile {
      * Create updated version of this item with new selling price
      */
     public ItemMasterFile updateSellingPrice(Money newSellingPrice, UserID updatedBy) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime newUpdated = (this.lastUpdated != null && !now.isAfter(this.lastUpdated))
+                ? this.lastUpdated.plusNanos(1)
+                : now;
         return new Builder(this)
                 .sellingPrice(newSellingPrice)
                 .updatedBy(updatedBy)
-                .lastUpdated(LocalDateTime.now())
+                .lastUpdated(newUpdated)
                 .build();
     }
 
@@ -127,10 +131,14 @@ public class ItemMasterFile {
      * Mark item as featured
      */
     public ItemMasterFile markAsFeatured(UserID updatedBy) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime newUpdated = (this.lastUpdated != null && !now.isAfter(this.lastUpdated))
+                ? this.lastUpdated.plusNanos(1)
+                : now;
         return new Builder(this)
                 .isFeatured(true)
                 .updatedBy(updatedBy)
-                .lastUpdated(LocalDateTime.now())
+                .lastUpdated(newUpdated)
                 .build();
     }
 
@@ -138,10 +146,14 @@ public class ItemMasterFile {
      * Mark item as latest arrival
      */
     public ItemMasterFile markAsLatest(UserID updatedBy) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime newUpdated = (this.lastUpdated != null && !now.isAfter(this.lastUpdated))
+                ? this.lastUpdated.plusNanos(1)
+                : now;
         return new Builder(this)
                 .isLatest(true)
                 .updatedBy(updatedBy)
-                .lastUpdated(LocalDateTime.now())
+                .lastUpdated(newUpdated)
                 .build();
     }
 
@@ -149,10 +161,14 @@ public class ItemMasterFile {
      * Deactivate the item
      */
     public ItemMasterFile deactivate(UserID updatedBy) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime newUpdated = (this.lastUpdated != null && !now.isAfter(this.lastUpdated))
+                ? this.lastUpdated.plusNanos(1)
+                : now;
         return new Builder(this)
                 .status(ProductStatus.INACTIVE)
                 .updatedBy(updatedBy)
-                .lastUpdated(LocalDateTime.now())
+                .lastUpdated(newUpdated)
                 .build();
     }
 

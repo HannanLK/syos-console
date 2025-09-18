@@ -1,85 +1,155 @@
 package com.syos.adapter.out.persistence.memory;
 
 import com.syos.application.ports.out.WarehouseStockRepository;
-import com.syos.application.strategies.stock.BatchInfo;
+import com.syos.domain.entities.WarehouseStock;
+import com.syos.domain.valueobjects.ItemCode;
+import com.syos.domain.valueobjects.Quantity;
+import com.syos.domain.valueobjects.UserID;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
+/**
+ * Minimal in-memory WarehouseStockRepository matching current port interface.
+ */
 public class InMemoryWarehouseStockRepository implements WarehouseStockRepository {
-    private static final class BatchMeta {
-        long batchId;
-        LocalDate received;
-        LocalDate expiry;
-        BatchMeta(long batchId, LocalDate received, LocalDate expiry) {
-            this.batchId = batchId; this.received = received; this.expiry = expiry;
-        }
-    }
-
-    // itemId -> (batchId -> qty)
-    private final Map<Long, Map<Long, BigDecimal>> qtyByItemBatch = new HashMap<>();
-    // batchId -> meta
-    private final Map<Long, BatchMeta> metaByBatch = new HashMap<>();
-
-    // For tests: capture last allocation
-    private Map<Long, BigDecimal> lastAllocation = Collections.emptyMap();
-
-    public void registerBatchMeta(long batchId, LocalDate received, LocalDate expiry) {
-        metaByBatch.put(batchId, new BatchMeta(batchId, received, expiry));
-    }
+    private final Map<Long, WarehouseStock> store = new ConcurrentHashMap<>();
+    private final AtomicLong seq = new AtomicLong(1);
 
     @Override
-    public List<BatchInfo> findAvailableBatchesForItem(long itemId) {
-        Map<Long, BigDecimal> byBatch = qtyByItemBatch.getOrDefault(itemId, Collections.emptyMap());
-        List<BatchInfo> list = new ArrayList<>();
-        for (Map.Entry<Long, BigDecimal> e : byBatch.entrySet()) {
-            BatchMeta m = metaByBatch.get(e.getKey());
-            if (m == null) continue;
-            if (e.getValue().signum() > 0) {
-                list.add(BatchInfo.of(m.batchId, e.getValue(), m.received, m.expiry));
-            }
-        }
-        return list;
-    }
-
-    @Override
-    public void allocateFromBatches(long itemId, Map<Long, BigDecimal> batchIdToQty) {
-        lastAllocation = new HashMap<>(batchIdToQty);
-        Map<Long, BigDecimal> byBatch = qtyByItemBatch.computeIfAbsent(itemId, k -> new HashMap<>());
-        for (Map.Entry<Long, BigDecimal> e : batchIdToQty.entrySet()) {
-            byBatch.compute(e.getKey(), (k, v) -> {
-                BigDecimal current = v == null ? BigDecimal.ZERO : v;
-                return current.subtract(e.getValue());
-            });
+    public WarehouseStock save(WarehouseStock warehouseStock) {
+        Long id = warehouseStock.getId();
+        if (id == null) {
+            id = seq.getAndIncrement();
+            // Create new WarehouseStock with assigned ID using builder
+            WarehouseStock warehouseStockWithId = new WarehouseStock.Builder(warehouseStock)
+                    .id(id)
+                    .build();
+            store.put(id, warehouseStockWithId);
+            return warehouseStockWithId;
+        } else {
+            store.put(id, warehouseStock);
+            return warehouseStock;
         }
     }
 
     @Override
-    public void receiveToWarehouse(long itemId, long batchId, BigDecimal quantity) {
-        Map<Long, BigDecimal> byBatch = qtyByItemBatch.computeIfAbsent(itemId, k -> new HashMap<>());
-        byBatch.merge(batchId, quantity, BigDecimal::add);
-        // if meta missing, set default received now, expiry null
-        metaByBatch.putIfAbsent(batchId, new BatchMeta(batchId, LocalDate.now(), null));
+    public Optional<WarehouseStock> findById(Long id) {
+        return Optional.ofNullable(store.get(id));
+    }
+
+    private Comparator<WarehouseStock> fifoWithExpiryComparator() {
+        return Comparator
+                .comparing((WarehouseStock ws) -> ws.getExpiryDate() == null)
+                .thenComparing(ws -> Optional.ofNullable(ws.getExpiryDate()).orElse(LocalDateTime.MAX))
+                .thenComparing(WarehouseStock::getReceivedDate);
     }
 
     @Override
+    public List<WarehouseStock> findAvailableByItemId(Long itemId) {
+        return store.values().stream()
+                .filter(ws -> Objects.equals(ws.getItemId(), itemId))
+                .filter(WarehouseStock::isAvailableForTransfer)
+                .sorted(fifoWithExpiryComparator())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<WarehouseStock> findAvailableByItemCode(ItemCode itemCode) {
+        return store.values().stream()
+                .filter(ws -> ws.getItemCode().equals(itemCode))
+                .filter(WarehouseStock::isAvailableForTransfer)
+                .sorted(fifoWithExpiryComparator())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<WarehouseStock> findByItemIdAndBatchId(Long itemId, Long batchId) {
+        return store.values().stream()
+                .filter(ws -> Objects.equals(ws.getItemId(), itemId))
+                .filter(ws -> Objects.equals(ws.getBatchId(), batchId))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<WarehouseStock> findByLocation(String location) {
+        return store.values().stream()
+                .filter(ws -> Objects.equals(ws.getLocation(), location))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<WarehouseStock> findReservedStock() {
+        return store.values().stream()
+                .filter(WarehouseStock::isReserved)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<WarehouseStock> findExpiringWithinDays(int days) {
+        LocalDateTime threshold = LocalDateTime.now().plusDays(days);
+        return store.values().stream()
+                .filter(ws -> ws.getExpiryDate() != null)
+                .filter(ws -> ws.getExpiryDate().isBefore(threshold))
+                .filter(ws -> !ws.isExpired())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<WarehouseStock> findExpiredStock() {
+        return store.values().stream()
+                .filter(WarehouseStock::isExpired)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        store.remove(id);
+    }
+
+    @Override
+    public boolean existsByItemId(Long itemId) {
+        return store.values().stream().anyMatch(ws -> Objects.equals(ws.getItemId(), itemId));
+    }
+
+    // Test helpers
+    public void clear() { store.clear(); seq.set(1); }
+    public List<WarehouseStock> findAll() { return new ArrayList<>(store.values()); }
+    public int size() { return store.size(); }
+    
+    /**
+     * Test method to add stock for testing purposes
+     */
     public void addStock(long itemId, long batchId, BigDecimal quantity) {
-        receiveToWarehouse(itemId, batchId, quantity);
+        // Create warehouse stock using builder pattern
+        WarehouseStock stock = WarehouseStock.builder()
+                .id(seq.getAndIncrement())
+                .itemId(itemId)
+                .batchId(batchId)
+                .itemCode(ItemCode.of("TEST" + itemId))
+                .quantityReceived(Quantity.of(quantity))
+                .quantityAvailable(Quantity.of(quantity))
+                .receivedDate(LocalDateTime.now())
+                .receivedBy(UserID.of(1L)) // Test user
+                .location("TEST-WAREHOUSE")
+                .isReserved(false)
+                .lastUpdatedBy(UserID.of(1L))
+                .build();
+        store.put(stock.getId(), stock);
     }
-
-    @Override
+    
+    /**
+     * Test method to get total available stock for an item
+     */
     public BigDecimal getTotalAvailableStock(long itemId) {
-        return qtyByItemBatch.getOrDefault(itemId, Collections.emptyMap())
-            .values()
-            .stream()
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-    // Test helper
-    public Map<Long, BigDecimal> getLastAllocation() { return lastAllocation; }
-    public BigDecimal getWarehouseQty(long itemId, long batchId) {
-        return qtyByItemBatch.getOrDefault(itemId, Collections.emptyMap()).getOrDefault(batchId, BigDecimal.ZERO);
+        return store.values().stream()
+                .filter(ws -> Objects.equals(ws.getItemId(), itemId))
+                .filter(WarehouseStock::isAvailableForTransfer)
+                .map(ws -> ws.getQuantityAvailable().toBigDecimal())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

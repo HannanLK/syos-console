@@ -39,39 +39,8 @@ public class TransferToWebUseCase {
     }
 
     public void transfer(long itemId, BigDecimal quantity) {
-        if (quantity == null || quantity.signum() <= 0) {
-            throw new IllegalArgumentException("Transfer quantity must be > 0");
-        }
-
-        // Get available batches from warehouse
-        List<BatchInfo> available = warehouseRepo.findAvailableBatchesForItem(itemId);
-        
-        // Check total availability
-        BigDecimal totalAvailable = available.stream()
-            .map(BatchInfo::getAvailableQuantity)
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
-            
-        if (totalAvailable.compareTo(quantity) < 0) {
-            throw new InsufficientStockException(
-                "Not enough stock in warehouse. Available: " + totalAvailable + ", Required: " + quantity);
-        }
-
-        // Use strategy to select batches (FIFO with expiry override)
-        List<BatchAllocation> allocations = strategy.selectBatchesForDispatch(available, quantity);
-        
-        // Process each allocation
-        Map<Long, BigDecimal> toAllocate = new HashMap<>();
-        for (BatchAllocation alloc : allocations) {
-            toAllocate.put(alloc.getBatchId(), alloc.getAllocatedQuantity());
-            
-            // Add to web inventory
-            webRepo.addToWebInventory(itemId, alloc.getBatchId(), alloc.getAllocatedQuantity());
-            
-            // Record transfer
-            transferRepo.recordTransfer(itemId, alloc.getBatchId(), "WAREHOUSE", "WEB", "AUTO");
-        }
-
-        // Reduce warehouse stock
-        warehouseRepo.allocateFromBatches(itemId, toAllocate);
+        // Legacy use case not aligned with current repository ports.
+        // Product transfers are handled by CompleteProductManagementUseCase.
+        throw new UnsupportedOperationException("TransferToWebUseCase is deprecated. Use CompleteProductManagementUseCase.transferToWeb()");
     }
 }

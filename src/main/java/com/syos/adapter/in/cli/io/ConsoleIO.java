@@ -19,6 +19,13 @@ public interface ConsoleIO {
      */
     String readLine(String prompt);
 
+    /**
+     * Backward-compatible alias used by some controllers.
+     */
+    default String readInput(String prompt) {
+        return readLine(prompt);
+    }
+
     String readPassword();
 
     /**

@@ -55,6 +55,15 @@ public final class Money implements Comparable<Money> {
         return new Money(this.amount.multiply(BigDecimal.valueOf(factor)));
     }
 
+    // Backward-compatibility aliases expected by some legacy code
+    public Money multiply(BigDecimal factor) {
+        return times(factor);
+    }
+
+    public BigDecimal getAmount() {
+        return this.amount;
+    }
+
     // Business logic methods for product pricing
     public boolean isLessThan(Money other) {
         return this.amount.compareTo(other.amount) < 0;
@@ -99,7 +108,8 @@ public final class Money implements Comparable<Money> {
     }
 
     public String toDisplayString() {
-        return amount.toPlainString();
+        // Display without unnecessary trailing zeros (e.g., 150.0 -> 150)
+        return amount.stripTrailingZeros().toPlainString();
     }
 
     @Override

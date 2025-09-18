@@ -15,6 +15,10 @@ public class Menu {
     @Getter
     private final String prompt;
 
+    // Explicit getters to avoid Lombok processing issues during compilation
+    public String getTitle() { return title; }
+    public String getPrompt() { return prompt; }
+
     private Menu(Builder builder) {
         this.title = builder.title;
         this.items = new ArrayList<>(builder.items);
