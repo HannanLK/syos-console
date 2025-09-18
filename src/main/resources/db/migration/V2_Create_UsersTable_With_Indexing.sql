@@ -7,7 +7,7 @@
 -- =====================================================
 -- 1 USERS TABLE CREATION
 -- =====================================================
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     -- Primary identification
     id BIGSERIAL PRIMARY KEY,
 
@@ -46,26 +46,30 @@ CREATE TABLE users (
     CONSTRAINT fk_users_created_by FOREIGN KEY (created_by) REFERENCES users(id)
 );
 
+-- Ensure column exists even if users table pre-existed without it
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS member_since TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
 -- =====================================================
 -- PERFORMANCE INDEXES
 -- =====================================================
 
 -- Primary authentication index (most frequent operation)
-CREATE UNIQUE INDEX idx_users_username_active
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_active
     ON users (username)
     WHERE is_active = true;
 
 -- Email lookup index for registration and password recovery
-CREATE UNIQUE INDEX idx_users_email_active
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_active
     ON users (email)
     WHERE is_active = true;
 
 -- Role-based access control index
-CREATE INDEX idx_users_role_active
+CREATE INDEX IF NOT EXISTS idx_users_role_active
     ON users (role, is_active);
 
 -- Customer loyalty analysis
-CREATE INDEX idx_users_loyalty_points
+CREATE INDEX IF NOT EXISTS idx_users_loyalty_points
     ON users (synex_points DESC, role)
     WHERE role = 'CUSTOMER' AND is_active = true;
 
@@ -83,10 +87,19 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger to automatically update updated_at field
-CREATE TRIGGER trg_users_updated_at
-    BEFORE UPDATE ON users
-    FOR EACH ROW
-EXECUTE FUNCTION update_users_updated_at();
+DO
+$$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger WHERE tgname = 'trg_users_updated_at'
+    ) THEN
+        CREATE TRIGGER trg_users_updated_at
+            BEFORE UPDATE ON users
+            FOR EACH ROW
+            EXECUTE FUNCTION update_users_updated_at();
+    END IF;
+END
+$$;
 
 -- =====================================================
 -- COMMENTS AND DOCUMENTATION

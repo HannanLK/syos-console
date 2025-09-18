@@ -102,39 +102,39 @@ class ProductUseCaseIntegrationTest {
     @DisplayName("Should validate all required fields when adding product")
     void shouldValidateAllRequiredFields() {
         // Test null request
-        assertThrows(IllegalArgumentException.class, 
+        assertThrows(IllegalArgumentException.class,
             () -> addProductUseCase.execute(null));
 
         // Test empty item code
-        AddProductUseCase.AddProductRequest request = createValidProductRequest();
-        request.itemCode("");
-        assertThrows(IllegalArgumentException.class, 
-            () -> addProductUseCase.execute(request));
+        AddProductUseCase.AddProductRequest reqEmptyCode = createValidProductRequest();
+        reqEmptyCode.itemCode("");
+        assertThrows(IllegalArgumentException.class,
+            () -> addProductUseCase.execute(reqEmptyCode));
 
         // Test null item name
-        request = createValidProductRequest();
-        request.itemName(null);
-        assertThrows(IllegalArgumentException.class, 
-            () -> addProductUseCase.execute(request));
+        AddProductUseCase.AddProductRequest reqNullName = createValidProductRequest();
+        reqNullName.itemName(null);
+        assertThrows(IllegalArgumentException.class,
+            () -> addProductUseCase.execute(reqNullName));
 
         // Test invalid brand ID
-        request = createValidProductRequest();
-        request.brandId(-1L);
-        assertThrows(IllegalArgumentException.class, 
-            () -> addProductUseCase.execute(request));
+        AddProductUseCase.AddProductRequest reqInvalidBrand = createValidProductRequest();
+        reqInvalidBrand.brandId(-1L);
+        assertThrows(IllegalArgumentException.class,
+            () -> addProductUseCase.execute(reqInvalidBrand));
 
         // Test invalid cost price
-        request = createValidProductRequest();
-        request.costPrice(BigDecimal.ZERO);
-        assertThrows(IllegalArgumentException.class, 
-            () -> addProductUseCase.execute(request));
+        AddProductUseCase.AddProductRequest reqInvalidCost = createValidProductRequest();
+        reqInvalidCost.costPrice(BigDecimal.ZERO);
+        assertThrows(IllegalArgumentException.class,
+            () -> addProductUseCase.execute(reqInvalidCost));
 
         // Test selling price less than cost price
-        request = createValidProductRequest();
-        request.costPrice(BigDecimal.valueOf(200));
-        request.sellingPrice(BigDecimal.valueOf(100));
-        assertThrows(IllegalArgumentException.class, 
-            () -> addProductUseCase.execute(request));
+        AddProductUseCase.AddProductRequest reqInvalidPricing = createValidProductRequest();
+        reqInvalidPricing.costPrice(BigDecimal.valueOf(200));
+        reqInvalidPricing.sellingPrice(BigDecimal.valueOf(100));
+        assertThrows(IllegalArgumentException.class,
+            () -> addProductUseCase.execute(reqInvalidPricing));
     }
 
     @Test
@@ -222,27 +222,27 @@ class ProductUseCaseIntegrationTest {
         assertTrue(response.isSuccess());
 
         // Try to add product with same item code
-        request = createValidProductRequest(); // Same item code PROD001
-        assertThrows(Exception.class, () -> addProductUseCase.execute(request));
+        AddProductUseCase.AddProductRequest dupRequest = createValidProductRequest(); // Same item code PROD001
+        assertThrows(Exception.class, () -> addProductUseCase.execute(dupRequest));
     }
 
     @Test
     @DisplayName("Should validate foreign key relationships")
     void shouldValidateForeignKeyRelationships() {
         // Test invalid brand ID
-        AddProductUseCase.AddProductRequest request = createValidProductRequest();
-        request.brandId(999L); // Non-existent brand
-        assertThrows(Exception.class, () -> addProductUseCase.execute(request));
+        AddProductUseCase.AddProductRequest reqInvalidBrandFk = createValidProductRequest();
+        reqInvalidBrandFk.brandId(999L); // Non-existent brand
+        assertThrows(Exception.class, () -> addProductUseCase.execute(reqInvalidBrandFk));
 
         // Test invalid category ID
-        request = createValidProductRequest();
-        request.categoryId(999L);
-        assertThrows(Exception.class, () -> addProductUseCase.execute(request));
+        AddProductUseCase.AddProductRequest reqInvalidCategoryFk = createValidProductRequest();
+        reqInvalidCategoryFk.categoryId(999L);
+        assertThrows(Exception.class, () -> addProductUseCase.execute(reqInvalidCategoryFk));
 
         // Test invalid supplier ID
-        request = createValidProductRequest();
-        request.supplierId(999L);
-        assertThrows(Exception.class, () -> addProductUseCase.execute(request));
+        AddProductUseCase.AddProductRequest reqInvalidSupplierFk = createValidProductRequest();
+        reqInvalidSupplierFk.supplierId(999L);
+        assertThrows(Exception.class, () -> addProductUseCase.execute(reqInvalidSupplierFk));
     }
 
     @Test
@@ -329,37 +329,78 @@ class ProductUseCaseIntegrationTest {
     // Mock repository implementations for testing
     private static class MockBrandRepository implements BrandRepository {
         @Override
-        public boolean existsById(Long id) { 
-            return id != null && id >= 1 && id <= 10; 
-        }
-        
+        public com.syos.domain.entities.Brand save(com.syos.domain.entities.Brand brand) { return brand; }
         @Override
-        public boolean isActive(Long id) { 
-            return existsById(id); 
-        }
+        public java.util.Optional<com.syos.domain.entities.Brand> findById(Long id) { return java.util.Optional.empty(); }
+        @Override
+        public java.util.Optional<com.syos.domain.entities.Brand> findByBrandCode(String brandCode) { return java.util.Optional.empty(); }
+        @Override
+        public boolean existsById(Long id) { return id != null && id >= 1 && id <= 10; }
+        @Override
+        public boolean existsByBrandCode(String brandCode) { return false; }
+        @Override
+        public java.util.List<com.syos.domain.entities.Brand> findAllActive() { return java.util.Collections.emptyList(); }
+        @Override
+        public java.util.List<com.syos.domain.entities.Brand> findAll() { return java.util.Collections.emptyList(); }
+        @Override
+        public boolean isActive(Long id) { return existsById(id); }
+        @Override
+        public long countActiveBrands() { return 0; }
+        @Override
+        public void deleteById(Long id) { /* no-op */ }
     }
 
     private static class MockCategoryRepository implements CategoryRepository {
         @Override
-        public boolean existsById(Long id) { 
-            return id != null && id >= 1 && id <= 10; 
-        }
-        
+        public com.syos.domain.entities.Category save(com.syos.domain.entities.Category category) { return category; }
         @Override
-        public boolean isActive(Long id) { 
-            return existsById(id); 
-        }
+        public java.util.Optional<com.syos.domain.entities.Category> findById(Long id) { return java.util.Optional.empty(); }
+        @Override
+        public java.util.Optional<com.syos.domain.entities.Category> findByCategoryCode(String categoryCode) { return java.util.Optional.empty(); }
+        @Override
+        public boolean existsById(Long id) { return id != null && id >= 1 && id <= 10; }
+        @Override
+        public boolean existsByCategoryCode(String categoryCode) { return false; }
+        @Override
+        public java.util.List<com.syos.domain.entities.Category> findAllActive() { return java.util.Collections.emptyList(); }
+        @Override
+        public java.util.List<com.syos.domain.entities.Category> findRootCategories() { return java.util.Collections.emptyList(); }
+        @Override
+        public java.util.List<com.syos.domain.entities.Category> findByParentCategoryId(Long parentId) { return java.util.Collections.emptyList(); }
+        @Override
+        public java.util.List<com.syos.domain.entities.Category> findAll() { return java.util.Collections.emptyList(); }
+        @Override
+        public boolean isActive(Long id) { return existsById(id); }
+        @Override
+        public java.util.List<com.syos.domain.entities.Category> getCategoryHierarchy() { return java.util.Collections.emptyList(); }
+        @Override
+        public long countActiveCategories() { return 0; }
+        @Override
+        public void deleteById(Long id) { /* no-op */ }
     }
 
     private static class MockSupplierRepository implements SupplierRepository {
         @Override
-        public boolean existsById(Long id) { 
-            return id != null && id >= 1 && id <= 10; 
-        }
-        
+        public com.syos.domain.entities.Supplier save(com.syos.domain.entities.Supplier supplier) { return supplier; }
         @Override
-        public boolean isActive(Long id) { 
-            return existsById(id); 
-        }
+        public java.util.Optional<com.syos.domain.entities.Supplier> findById(Long id) { return java.util.Optional.empty(); }
+        @Override
+        public java.util.Optional<com.syos.domain.entities.Supplier> findBySupplierCode(String supplierCode) { return java.util.Optional.empty(); }
+        @Override
+        public boolean existsById(Long id) { return id != null && id >= 1 && id <= 10; }
+        @Override
+        public boolean existsBySupplierCode(String supplierCode) { return false; }
+        @Override
+        public java.util.List<com.syos.domain.entities.Supplier> findAllActive() { return java.util.Collections.emptyList(); }
+        @Override
+        public java.util.List<com.syos.domain.entities.Supplier> findAll() { return java.util.Collections.emptyList(); }
+        @Override
+        public boolean isActive(Long id) { return existsById(id); }
+        @Override
+        public long countActiveSuppliers() { return 0; }
+        @Override
+        public void deleteById(Long id) { /* no-op */ }
+        @Override
+        public java.util.List<com.syos.domain.entities.Supplier> searchByName(String searchTerm) { return java.util.Collections.emptyList(); }
     }
 }

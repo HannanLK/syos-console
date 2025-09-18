@@ -6,7 +6,7 @@
 -- -----------------------------------------------------------------------------
 -- 16 BATCHES TABLE (Tracks incoming stock with expiry dates)
 -- -----------------------------------------------------------------------------
-CREATE TABLE batches (
+CREATE TABLE IF NOT EXISTS batches (
     id BIGSERIAL PRIMARY KEY,
     
     -- Product Reference
@@ -49,7 +49,7 @@ CREATE TABLE batches (
 -- -----------------------------------------------------------------------------
 -- 17 LOCATIONS TABLE (Physical locations for stock)
 -- -----------------------------------------------------------------------------
-CREATE TABLE locations (
+CREATE TABLE IF NOT EXISTS locations (
     id BIGSERIAL PRIMARY KEY,
     location_code VARCHAR(20) UNIQUE NOT NULL,
     location_name VARCHAR(100) NOT NULL,
@@ -69,7 +69,7 @@ CREATE TABLE locations (
 -- -----------------------------------------------------------------------------
 -- 18 STOCK TABLE (Current stock levels at different locations)
 -- -----------------------------------------------------------------------------
-CREATE TABLE stock (
+CREATE TABLE IF NOT EXISTS stock (
     id BIGSERIAL PRIMARY KEY,
     
     -- References
@@ -102,7 +102,7 @@ CREATE TABLE stock (
 -- -----------------------------------------------------------------------------
 -- 19 STOCK_MOVEMENTS TABLE (Audit trail for all stock changes)
 -- -----------------------------------------------------------------------------
-CREATE TABLE stock_movements (
+CREATE TABLE IF NOT EXISTS stock_movements (
     id BIGSERIAL PRIMARY KEY,
     
     -- References
@@ -143,13 +143,14 @@ CREATE TABLE stock_movements (
 CREATE INDEX idx_batches_item_expiry ON batches (item_id, expiry_date) 
     WHERE quantity_available > 0;
     
-CREATE INDEX idx_batches_item_purchase_date ON batches (item_id, purchase_date) 
+CREATE INDEX IF NOT EXISTS idx_batches_item_received_date ON batches (item_id, received_date) 
     WHERE quantity_available > 0;
 
-CREATE INDEX idx_batches_expiry_soon ON batches (expiry_date) 
-    WHERE expiry_date IS NOT NULL 
-    AND quantity_available > 0 
-    AND expiry_date <= CURRENT_DATE + INTERVAL '30 days';
+CREATE OR REPLACE VIEW batches_expiring_soon AS
+SELECT * FROM batches
+WHERE expiry_date IS NOT NULL 
+  AND quantity_available > 0 
+  AND expiry_date <= CURRENT_DATE + INTERVAL '30 days';
 
 -- Stock Management
 CREATE INDEX idx_stock_item_location ON stock (item_id, location_id);
@@ -157,7 +158,7 @@ CREATE INDEX idx_stock_available ON stock (available_stock) WHERE available_stoc
 CREATE INDEX idx_stock_low_levels ON stock (item_id, available_stock);
 
 -- Location Management
-CREATE INDEX idx_locations_active ON locations (location_type, is_active) 
+CREATE INDEX IF NOT EXISTS idx_locations_active_type ON locations (location_type, is_active) 
     WHERE is_active = true;
 
 -- Stock Movement Audit
@@ -170,15 +171,33 @@ CREATE INDEX idx_movements_reference ON stock_movements (reference_number)
 -- -----------------------------------------------------------------------------
 
 -- Update timestamp triggers
-CREATE TRIGGER update_batches_updated_at 
-    BEFORE UPDATE ON batches
-    FOR EACH ROW 
-    EXECUTE FUNCTION update_updated_at_column();
+DO
+$$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger WHERE tgname = 'update_batches_updated_at'
+    ) THEN
+        CREATE TRIGGER update_batches_updated_at 
+            BEFORE UPDATE ON batches
+            FOR EACH ROW 
+            EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END
+$$;
 
-CREATE TRIGGER update_locations_updated_at 
-    BEFORE UPDATE ON locations
-    FOR EACH ROW 
-    EXECUTE FUNCTION update_updated_at_column();
+DO
+$$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger WHERE tgname = 'update_locations_updated_at'
+    ) THEN
+        CREATE TRIGGER update_locations_updated_at 
+            BEFORE UPDATE ON locations
+            FOR EACH ROW 
+            EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END
+$$;
 
 CREATE TRIGGER update_stock_updated_at 
     BEFORE UPDATE ON stock
@@ -266,7 +285,7 @@ SELECT
                  THEN b.expiry_date 
                  ELSE CURRENT_DATE + INTERVAL '10 years' 
             END ASC,
-            b.purchase_date ASC,
+            b.received_date ASC,
             b.id ASC
     ) as fifo_priority
 FROM batches b
@@ -309,7 +328,7 @@ INSERT INTO locations (location_code, location_name, location_type, description)
 ('MAIN_WH', 'Main Warehouse', 'WAREHOUSE', 'Primary storage facility'),
 ('SHELF_01', 'Store Shelf Section 1', 'SHELF', 'Front store display shelf'),
 ('SHELF_02', 'Store Shelf Section 2', 'SHELF', 'Side store display shelf'),
-('WEB_INV', 'Web Inventory', 'WEB', 'Online store inventory');
+('WEB_INV', 'Web Inventory', 'WEB_INVENTORY', 'Online store inventory');
 
 -- -----------------------------------------------------------------------------
 -- COMMENTS

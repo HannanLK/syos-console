@@ -6,7 +6,7 @@
 -- -----------------------------------------------------------------------------
 -- 2 SUPPLIERS TABLE
 -- -----------------------------------------------------------------------------
-CREATE TABLE suppliers (
+CREATE TABLE IF NOT EXISTS suppliers (
     id BIGSERIAL PRIMARY KEY,
     supplier_code VARCHAR(20) UNIQUE NOT NULL,
     supplier_name VARCHAR(100) NOT NULL,
@@ -26,7 +26,7 @@ CREATE TABLE suppliers (
 -- -----------------------------------------------------------------------------
 -- 3 BRANDS TABLE
 -- -----------------------------------------------------------------------------
-CREATE TABLE brands (
+CREATE TABLE IF NOT EXISTS brands (
     id BIGSERIAL PRIMARY KEY,
     brand_code VARCHAR(20) UNIQUE NOT NULL,
     brand_name VARCHAR(100) UNIQUE NOT NULL,
@@ -39,7 +39,7 @@ CREATE TABLE brands (
 -- -----------------------------------------------------------------------------
 -- 4 BRAND_SUPPLIER JUNCTION TABLE
 -- -----------------------------------------------------------------------------
-CREATE TABLE brand_suppliers (
+CREATE TABLE IF NOT EXISTS brand_suppliers (
     brand_id BIGINT NOT NULL,
     supplier_id BIGINT NOT NULL,
     is_primary BOOLEAN DEFAULT false,
@@ -52,7 +52,7 @@ CREATE TABLE brand_suppliers (
 -- -----------------------------------------------------------------------------
 -- 5 CATEGORIES TABLE (Self-referencing for hierarchy)
 -- -----------------------------------------------------------------------------
-CREATE TABLE categories (
+CREATE TABLE IF NOT EXISTS categories (
     id BIGSERIAL PRIMARY KEY,
     parent_category_id BIGINT,
     category_code VARCHAR(20) UNIQUE NOT NULL,
@@ -68,22 +68,49 @@ CREATE TABLE categories (
 -- -----------------------------------------------------------------------------
 -- Create indexes
 -- -----------------------------------------------------------------------------
-CREATE INDEX idx_suppliers_active ON suppliers(is_active) WHERE is_active = true;
-CREATE INDEX idx_brands_active ON brands(is_active) WHERE is_active = true;
-CREATE INDEX idx_categories_parent ON categories(parent_category_id);
-CREATE INDEX idx_categories_active ON categories(is_active) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_suppliers_active ON suppliers(is_active) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_brands_active ON brands(is_active) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_categories_parent ON categories(parent_category_id);
+CREATE INDEX IF NOT EXISTS idx_categories_active ON categories(is_active) WHERE is_active = true;
 
 -- -----------------------------------------------------------------------------
 -- Apply update timestamp triggers
 -- -----------------------------------------------------------------------------
-CREATE TRIGGER update_suppliers_updated_at BEFORE UPDATE ON suppliers
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DO
+$$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger WHERE tgname = 'update_suppliers_updated_at'
+    ) THEN
+        CREATE TRIGGER update_suppliers_updated_at BEFORE UPDATE ON suppliers
+            FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END
+$$;
 
-CREATE TRIGGER update_brands_updated_at BEFORE UPDATE ON brands
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DO
+$$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger WHERE tgname = 'update_brands_updated_at'
+    ) THEN
+        CREATE TRIGGER update_brands_updated_at BEFORE UPDATE ON brands
+            FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END
+$$;
 
-CREATE TRIGGER update_categories_updated_at BEFORE UPDATE ON categories
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DO
+$$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger WHERE tgname = 'update_categories_updated_at'
+    ) THEN
+        CREATE TRIGGER update_categories_updated_at BEFORE UPDATE ON categories
+            FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END
+$$;
 
 -- -----------------------------------------------------------------------------
 -- Comments

@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Tests business rules, validation, and domain behavior.
  */
 @DisplayName("ItemMasterFile Domain Entity Tests")
-class ItemMasterFileTest {
+class ItemMasterFileComprehensiveTest {
 
     @Nested
     @DisplayName("Product Creation Tests")

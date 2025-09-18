@@ -6,11 +6,12 @@
 -- -----------------------------------------------------------------------------
 -- 7 LOCATIONS TABLE (For warehouses, shelves, web inventory)
 -- -----------------------------------------------------------------------------
-CREATE TABLE locations (
+CREATE TABLE IF NOT EXISTS locations (
     id BIGSERIAL PRIMARY KEY,
     location_code VARCHAR(20) UNIQUE NOT NULL,
     location_name VARCHAR(100) NOT NULL,
     location_type VARCHAR(50) NOT NULL CHECK (location_type IN ('WAREHOUSE', 'SHELF', 'WEB_INVENTORY')),
+    description TEXT,
     parent_location_id BIGINT,
     capacity INT DEFAULT 1000,
     current_occupancy INT DEFAULT 0,
@@ -25,7 +26,7 @@ CREATE TABLE locations (
 -- -----------------------------------------------------------------------------
 -- 8 ITEM_MASTER_FILE TABLE (Product catalog)
 -- -----------------------------------------------------------------------------
-CREATE TABLE item_master_file (
+CREATE TABLE IF NOT EXISTS item_master_file (
     id BIGSERIAL PRIMARY KEY,
     item_code VARCHAR(20) UNIQUE NOT NULL,
     item_name VARCHAR(200) NOT NULL,
@@ -61,7 +62,7 @@ CREATE TABLE item_master_file (
 -- -----------------------------------------------------------------------------
 -- 9 BATCHES TABLE (Track product batches with expiry)
 -- -----------------------------------------------------------------------------
-CREATE TABLE batches (
+CREATE TABLE IF NOT EXISTS batches (
     id BIGSERIAL PRIMARY KEY,
     batch_number VARCHAR(50) NOT NULL,
     item_id BIGINT NOT NULL,
@@ -86,7 +87,7 @@ CREATE TABLE batches (
 -- -----------------------------------------------------------------------------
 -- 10 WAREHOUSE_STOCK TABLE (Warehouse inventory with batch tracking)
 -- -----------------------------------------------------------------------------
-CREATE TABLE warehouse_stock (
+CREATE TABLE IF NOT EXISTS warehouse_stock (
     id BIGSERIAL PRIMARY KEY,
     warehouse_code VARCHAR(100) UNIQUE NOT NULL,
     item_id BIGINT NOT NULL,
@@ -125,7 +126,7 @@ FOR EACH ROW EXECUTE FUNCTION validate_warehouse_location();
 -- -----------------------------------------------------------------------------
 -- 11 SHELF_STOCK TABLE (Store shelf inventory)
 -- -----------------------------------------------------------------------------
-CREATE TABLE shelf_stock (
+CREATE TABLE IF NOT EXISTS shelf_stock (
     id BIGSERIAL PRIMARY KEY,
     item_id BIGINT NOT NULL,
     batch_id BIGINT,
@@ -164,7 +165,7 @@ FOR EACH ROW EXECUTE FUNCTION validate_shelf_location();
 -- -----------------------------------------------------------------------------
 -- 12 WEB_INVENTORY TABLE (Web/Online inventory)
 -- -----------------------------------------------------------------------------
-CREATE TABLE web_inventory (
+CREATE TABLE IF NOT EXISTS web_inventory (
     id BIGSERIAL PRIMARY KEY,
     item_id BIGINT NOT NULL,
     batch_id BIGINT,
@@ -200,7 +201,7 @@ FOR EACH ROW EXECUTE FUNCTION validate_web_location();
 -- -----------------------------------------------------------------------------
 -- 13 STOCK_TRANSFERS TABLE (Track movements between locations)
 -- -----------------------------------------------------------------------------
-CREATE TABLE stock_transfers (
+CREATE TABLE IF NOT EXISTS stock_transfers (
     id BIGSERIAL PRIMARY KEY,
     transfer_code VARCHAR(100) UNIQUE NOT NULL,
     item_id BIGINT NOT NULL,
@@ -230,35 +231,11 @@ CREATE TABLE stock_transfers (
     CONSTRAINT chk_different_locations CHECK (from_location_id != to_location_id)
 );
 
--- -----------------------------------------------------------------------------
--- 14 STOCK_MOVEMENTS TABLE (Audit trail for all stock changes)
--- -----------------------------------------------------------------------------
-CREATE TABLE stock_movements (
-    id BIGSERIAL PRIMARY KEY,
-    movement_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    item_id BIGINT NOT NULL,
-    batch_id BIGINT,
-    from_location_id BIGINT,
-    to_location_id BIGINT,
-    movement_type VARCHAR(50) NOT NULL,
-    quantity DECIMAL(10, 3) NOT NULL,
-    reference_type VARCHAR(50),
-    reference_id BIGINT,
-    reason TEXT,
-    performed_by BIGINT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (item_id) REFERENCES item_master_file(id) ON DELETE CASCADE,
-    FOREIGN KEY (batch_id) REFERENCES batches(id) ON DELETE SET NULL,
-    FOREIGN KEY (from_location_id) REFERENCES locations(id) ON DELETE SET NULL,
-    FOREIGN KEY (to_location_id) REFERENCES locations(id) ON DELETE SET NULL,
-    FOREIGN KEY (performed_by) REFERENCES users(id) ON DELETE SET NULL,
-    CONSTRAINT chk_movement_quantity CHECK (quantity != 0)
-);
 
 -- -----------------------------------------------------------------------------
 -- 15 NOTIFICATIONS TABLE
 -- -----------------------------------------------------------------------------
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT,
     notification_type notification_type NOT NULL,
@@ -278,8 +255,8 @@ CREATE TABLE notifications (
 -- -----------------------------------------------------------------------------
 -- Create indexes for performance
 -- -----------------------------------------------------------------------------
-CREATE INDEX idx_warehouse_stock_item ON warehouse_stock(item_id);
-CREATE INDEX idx_warehouse_stock_batch ON warehouse_stock(batch_id);
+CREATE INDEX IF NOT EXISTS idx_warehouse_stock_item ON warehouse_stock(item_id);
+CREATE INDEX IF NOT EXISTS idx_warehouse_stock_batch ON warehouse_stock(batch_id);
 CREATE INDEX idx_warehouse_stock_location ON warehouse_stock(location_id);
 CREATE INDEX idx_warehouse_stock_available ON warehouse_stock(item_id, quantity) WHERE quantity > 0;
 
@@ -295,8 +272,6 @@ CREATE INDEX idx_stock_transfers_item ON stock_transfers(item_id);
 CREATE INDEX idx_stock_transfers_status ON stock_transfers(transfer_status);
 CREATE INDEX idx_stock_transfers_dates ON stock_transfers(initiated_at, completed_at);
 
-CREATE INDEX idx_stock_movements_item ON stock_movements(item_id);
-CREATE INDEX idx_stock_movements_date ON stock_movements(movement_date);
 
 CREATE INDEX idx_batches_item ON batches(item_id);
 CREATE INDEX idx_batches_expiry ON batches(expiry_date) WHERE expiry_date IS NOT NULL;
@@ -346,5 +321,4 @@ COMMENT ON TABLE warehouse_stock IS 'Warehouse inventory tracking';
 COMMENT ON TABLE shelf_stock IS 'Store shelf inventory tracking';
 COMMENT ON TABLE web_inventory IS 'Web/online inventory tracking';
 COMMENT ON TABLE stock_transfers IS 'Stock movement tracking between locations';
-COMMENT ON TABLE stock_movements IS 'Audit trail for all inventory changes';
 COMMENT ON TABLE notifications IS 'System notifications for reorder, expiry, and other alerts';

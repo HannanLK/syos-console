@@ -1,5 +1,5 @@
 -- =============================================================================
--- SYOS Database Schema - V6__Create_Transactions_And_Reports.sql
+-- SYOS Database Schema - V7__Create_Transactions_And_Reports.sql
 -- Transaction Tables, Bills, and Reporting Views
 -- =============================================================================
 

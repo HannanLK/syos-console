@@ -8,7 +8,7 @@
     <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V4__Create_Item_Master_File_Table.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
     <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V4__Create_Warehouse_And_Inventory_Tables.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
     <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V5__Create_Batch_And_Stock_Tables.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
-    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V5__Create_FIFO_Functions_And_Procedures.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
-    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V6__Create_Transactions_And_Reports.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V6__Create_FIFO_Functions_And_Procedures.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V7__Create_Transactions_And_Reports.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
   </component>
 </project>

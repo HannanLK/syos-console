@@ -93,7 +93,7 @@ src/main/java/com/syos/
 ├── adapter/out/persistence/memory/
 │   └── InMemoryItemMasterFileRepository.java  # New repository implementation
 └── resources/db/migration/
-    └── V6__Create_Transactions_And_Reports.sql # Return tables removed
+    └── V7__Create_Transactions_And_Reports.sql # Return tables removed
 ```
 
 ## 🚀 Test Execution Results
