@@ -51,11 +51,10 @@ public class RegisterCustomerUseCase {
             
             // Validate and create value objects
             Username u = Username.of(username.trim());
-            Name n = Name.of(name.trim());
             Email e = Email.of(email.trim());
             
-            logger.debug("Created value objects - Username: {}, Name: {}, Email: {}", 
-                u.getValue(), n.getValue(), e.getValue());
+            logger.debug("Created value objects - Username: {}, Email: {}", 
+                u.getValue(), e.getValue());
             
             // Check if username already exists
             if (userRepository.existsByUsername(u.getValue())) {
@@ -69,10 +68,19 @@ public class RegisterCustomerUseCase {
                 throw new RegistrationException("Email already registered");
             }
             
-            logger.debug("Username and email availability checked - proceeding with user creation");
+            // Create new user using domain factory and value objects
+            com.syos.domain.valueobjects.Password password = com.syos.domain.valueobjects.Password.hash(rawPassword);
+            User user = User.createCustomer(u, e, password);
             
-            // Create new user
-            User user = User.registerNew(u, rawPassword, n, e);
+            // Update name only if it meets minimum domain rules; otherwise keep default
+            String trimmedName = name.trim();
+            if (trimmedName.length() >= 2) {
+                Name n = Name.of(trimmedName);
+                logger.debug("Proceeding with user creation. Name: {}", n.getValue());
+                user = user.updateProfile(n, e);
+            } else {
+                logger.debug("Provided name is too short; keeping default name for user: {}", u.getValue());
+            }
             
             logger.debug("User entity created successfully - Username: {}, Role: {}", 
                 user.getUsername().getValue(), user.getRole());

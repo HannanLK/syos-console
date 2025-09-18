@@ -91,4 +91,9 @@ public class StandardConsoleIO implements ConsoleIO {
     public void printWarning(String message) {
         System.out.println("⚠️ WARNING: " + message);
     }
+    
+    @Override
+    public void printInfo(String message) {
+        System.out.println("ℹ️ INFO: " + message);
+    }
 }

@@ -2,9 +2,14 @@ package com.syos.adapter.in.cli.menu;
 
 import com.syos.adapter.in.cli.commands.*;
 import com.syos.adapter.in.cli.io.ConsoleIO;
+import com.syos.adapter.in.cli.session.SessionManager;
 import com.syos.application.ports.out.UserRepository;
+import com.syos.application.ports.out.BrandRepository;
+import com.syos.application.ports.out.CategoryRepository;
+import com.syos.application.ports.out.SupplierRepository;
 import com.syos.application.usecases.auth.LoginUseCase;
 import com.syos.application.usecases.auth.RegisterCustomerUseCase;
+import com.syos.application.usecases.inventory.AddProductUseCase;
 import com.syos.shared.enums.UserRole;
 
 /**
@@ -17,6 +22,13 @@ public class MenuFactory {
     private final RegisterCustomerUseCase registerUseCase;
     private final UserRepository userRepository;
 
+    // Optional dependencies for enhanced features
+    private final AddProductUseCase addProductUseCase;
+    private final BrandRepository brandRepository;
+    private final CategoryRepository categoryRepository;
+    private final SupplierRepository supplierRepository;
+    private final SessionManager sessionManager;
+
     public MenuFactory(ConsoleIO console, MenuNavigator navigator,
                       LoginUseCase loginUseCase, RegisterCustomerUseCase registerUseCase,
                       UserRepository userRepository) {
@@ -25,6 +37,33 @@ public class MenuFactory {
         this.loginUseCase = loginUseCase;
         this.registerUseCase = registerUseCase;
         this.userRepository = userRepository;
+        // default optional dependencies to null for backward compatibility
+        this.addProductUseCase = null;
+        this.brandRepository = null;
+        this.categoryRepository = null;
+        this.supplierRepository = null;
+        this.sessionManager = null;
+    }
+
+    // Overloaded constructor to enable Add Product command and other features
+    public MenuFactory(ConsoleIO console, MenuNavigator navigator,
+                       LoginUseCase loginUseCase, RegisterCustomerUseCase registerUseCase,
+                       UserRepository userRepository,
+                       AddProductUseCase addProductUseCase,
+                       BrandRepository brandRepository,
+                       CategoryRepository categoryRepository,
+                       SupplierRepository supplierRepository,
+                       SessionManager sessionManager) {
+        this.console = console;
+        this.navigator = navigator;
+        this.loginUseCase = loginUseCase;
+        this.registerUseCase = registerUseCase;
+        this.userRepository = userRepository;
+        this.addProductUseCase = addProductUseCase;
+        this.brandRepository = brandRepository;
+        this.categoryRepository = categoryRepository;
+        this.supplierRepository = supplierRepository;
+        this.sessionManager = sessionManager;
     }
 
     /**
@@ -87,8 +126,10 @@ public class MenuFactory {
             .title("EMPLOYEE DASHBOARD")
             .addItem(new MenuItem("1", "Point of Sale (POS)", 
                 createPlaceholderCommand("Point of Sale")))
-            .addItem(new MenuItem("2", "Add Items", 
-                createPlaceholderCommand("Add Items")))
+            .addItem(new MenuItem("2", "Add Product",
+                (addProductUseCase != null && brandRepository != null && categoryRepository != null && supplierRepository != null && sessionManager != null)
+                    ? new AddProductCommand(console, addProductUseCase, brandRepository, categoryRepository, supplierRepository, sessionManager)
+                    : createPlaceholderCommand("Add Product")))
             .addItem(new MenuItem("3", "View Shelf Stock", 
                 createPlaceholderCommand("Shelf Stock")))
             .addItem(new MenuItem("4", "View Discounts", 
@@ -113,19 +154,22 @@ public class MenuFactory {
             .title("ADMINISTRATOR DASHBOARD")
             .addItem(new MenuItem("1", "Point of Sale (POS)", 
                 createPlaceholderCommand("Point of Sale")))
-            .addItem(new MenuItem("2", "Inventory Management", 
+            .addItem(new MenuItem("2", "Add Product",
+                (addProductUseCase != null && brandRepository != null && categoryRepository != null && supplierRepository != null && sessionManager != null)
+                    ? new AddProductCommand(console, addProductUseCase, brandRepository, categoryRepository, supplierRepository, sessionManager)
+                    : createPlaceholderCommand("Add Product")))
+            .addItem(new MenuItem("3", "Inventory Management", 
                 createPlaceholderCommand("Inventory Management")))
-            .addItem(new MenuItem("3", "User Management", 
+            .addItem(new MenuItem("4", "User Management", 
                 createPlaceholderCommand("User Management")))
-            .addItem(new MenuItem("4", "Reports & Analytics", 
+            .addItem(new MenuItem("5", "Reports & Analytics", 
                 createPlaceholderCommand("Reports & Analytics")))
-            .addItem(new MenuItem("5", "System Settings", 
+            .addItem(new MenuItem("6", "System Settings", 
                 createPlaceholderCommand("System Settings")))
-            .addItem(new MenuItem("6", "Add/Manage Users", 
+            .addItem(new MenuItem("7", "Add/Manage Users", 
                 createPlaceholderCommand("Add/Manage Users")))
-            .addItem(new MenuItem("7", "View Sales/Insights", 
+            .addItem(new MenuItem("8", "View Sales/Insights", 
                 createPlaceholderCommand("Sales & Insights")))
-
             .addItem(new MenuItem("L", "Logout", 
                 new LogoutCommand(console, navigator, this)))
             .prompt("Enter your choice: ")

@@ -81,7 +81,7 @@ public class InMemoryUserRepository implements UserRepository {
                                   String name, String email, UserRole role, double points) {
         LocalDateTime now = LocalDateTime.now();
         
-        return User.withId(
+        return User.reconstitute(
             UserID.of(id),
             Username.of(username),
             hashedPassword,
@@ -89,11 +89,10 @@ public class InMemoryUserRepository implements UserRepository {
             Name.of(name),
             Email.of(email),
             SynexPoints.of(BigDecimal.valueOf(points)),
-            ActiveStatus.active(),
-            CreatedAt.of(now),
-            UpdatedAt.of(now),
-            null, // createdBy
-            MemberSince.of(now)
+            true,
+            now,
+            now,
+            null
         );
     }
 
@@ -148,7 +147,20 @@ public class InMemoryUserRepository implements UserRepository {
         // If user doesn't have an ID, generate one and create a new user instance with the ID
         if (user.getId() == null) {
             long newId = nextId++;
-            savedUser = user.withId(UserID.of(newId));
+            // Reconstitute with assigned ID
+            savedUser = User.reconstitute(
+                UserID.of(newId),
+                user.getUsername(),
+                user.getPassword(),
+                user.getRole(),
+                user.getName(),
+                user.getEmail(),
+                user.getSynexPoints(),
+                user.isActive(),
+                user.getCreatedAt(),
+                user.getUpdatedAt(),
+                user.getCreatedBy()
+            );
             saveUserDirectly(savedUser);
             logger.info("Saved new user: {} with ID: {} and role: {}", 
                 savedUser.getUsername().getValue(), newId, savedUser.getRole());
@@ -206,5 +218,38 @@ public class InMemoryUserRepository implements UserRepository {
                 user.getRole());
         }
         logger.info("============================");
+    }
+
+    // ===== Implementations for extended UserRepository contract =====
+    @Override
+    public java.util.List<User> findAll() {
+        return new java.util.ArrayList<>(usersById.values());
+    }
+
+    @Override
+    public long countAll() {
+        return usersById.size();
+    }
+
+    @Override
+    public long countByRole(UserRole role) {
+        return usersById.values().stream().filter(u -> u.getRole() == role).count();
+    }
+
+    @Override
+    public java.util.List<User> searchUsers(String searchTerm) {
+        if (searchTerm == null || searchTerm.isBlank()) return findAll();
+        String term = searchTerm.toLowerCase();
+        return usersById.values().stream()
+            .filter(u -> u.getUsername().getValue().toLowerCase().contains(term)
+                      || u.getEmail().getValue().toLowerCase().contains(term)
+                      || u.getName().getValue().toLowerCase().contains(term))
+            .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Override
+    public Optional<User> findById(Long id) {
+        if (id == null) return Optional.empty();
+        return Optional.ofNullable(usersById.get(id));
     }
 }

@@ -94,7 +94,7 @@ public class LoginCommand implements Command {
         
         // Format member since date
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy");
-        String memberSince = user.getMemberSince().getValue().format(formatter);
+        String memberSince = user.getCreatedAt().format(formatter);
         
         console.println("\n╔══════════════════════════════════════╗");
         console.println("║           USER PROFILE                 ║");

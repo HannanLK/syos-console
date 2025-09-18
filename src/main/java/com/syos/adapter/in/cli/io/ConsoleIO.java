@@ -37,4 +37,25 @@ public interface ConsoleIO {
     void printError(String message);
     void printSuccess(String message);
     void printWarning(String message);
+    default void printInfo(String message) { println(message); }
+    
+    // Additional input methods needed by controllers
+    default String readString(String prompt) {
+        return readLine(prompt);
+    }
+    
+    default Integer readInt(String prompt) {
+        try {
+            String input = readLine(prompt);
+            return input != null && !input.trim().isEmpty() ? Integer.parseInt(input.trim()) : null;
+        } catch (NumberFormatException e) {
+            printError("Invalid number format. Please enter a valid integer.");
+            return readInt(prompt);
+        }
+    }
+    
+    default boolean readBoolean(String prompt) {
+        String input = readLine(prompt);
+        return input != null && (input.trim().toLowerCase().startsWith("y") || input.trim().toLowerCase().equals("true"));
+    }
 }

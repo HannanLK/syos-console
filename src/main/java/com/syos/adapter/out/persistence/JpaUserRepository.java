@@ -166,16 +166,17 @@ public class JpaUserRepository implements UserRepository {
         entity.setEmail(user.getEmail().getValue());
         entity.setSynexPoints(user.getSynexPoints().getValue());
         entity.setActive(user.isActive());
-        entity.setCreatedAt(user.getCreatedAt().getValue());
+        entity.setCreatedAt(user.getCreatedAt());
         entity.setUpdatedAt(LocalDateTime.now());
         if (user.getCreatedBy() != null) {
             entity.setCreatedBy(user.getCreatedBy().getValue());
         }
-        entity.setMemberSince(user.getMemberSince().getValue());
+        // MemberSince not tracked in domain now; align to createdAt for compatibility
+        entity.setMemberSince(user.getCreatedAt());
     }
 
     private User mapToDomain(UserEntity entity) {
-        return User.withId(
+        return User.reconstitute(
             UserID.of(entity.getId()),
             Username.of(entity.getUsername()),
             Password.fromHash(entity.getPasswordHash()),
@@ -183,12 +184,99 @@ public class JpaUserRepository implements UserRepository {
             Name.of(entity.getName()),
             Email.of(entity.getEmail()),
             SynexPoints.of(entity.getSynexPoints()),
-            ActiveStatus.of(entity.isActive()),
-            CreatedAt.of(entity.getCreatedAt()),
-            UpdatedAt.of(entity.getUpdatedAt()),
-            entity.getCreatedBy() != null ? UserID.of(entity.getCreatedBy()) : null,
-            MemberSince.of(entity.getMemberSince())
+            entity.isActive(),
+            entity.getCreatedAt(),
+            entity.getUpdatedAt(),
+            entity.getCreatedBy() != null ? UserID.of(entity.getCreatedBy()) : null
         );
+    }
+
+    // ===== Implementations for extended UserRepository contract =====
+    @Override
+    public Optional<User> findById(Long id) {
+        if (id == null) return Optional.empty();
+        EntityManager em = entityManagerFactory.createEntityManager();
+        try {
+            UserEntity entity = em.find(UserEntity.class, id);
+            return entity != null ? Optional.of(mapToDomain(entity)) : Optional.empty();
+        } catch (Exception e) {
+            logger.error("Error finding user by id: {}", id, e);
+            return Optional.empty();
+        } finally {
+            em.close();
+        }
+    }
+
+    @Override
+    public java.util.List<User> findAll() {
+        EntityManager em = entityManagerFactory.createEntityManager();
+        try {
+            jakarta.persistence.TypedQuery<UserEntity> query = em.createQuery("SELECT u FROM UserEntity u", UserEntity.class);
+            java.util.List<UserEntity> entities = query.getResultList();
+            java.util.List<User> users = new java.util.ArrayList<>();
+            for (UserEntity e : entities) {
+                users.add(mapToDomain(e));
+            }
+            return users;
+        } catch (Exception e) {
+            logger.error("Error fetching all users", e);
+            return java.util.Collections.emptyList();
+        } finally {
+            em.close();
+        }
+    }
+
+    @Override
+    public long countAll() {
+        EntityManager em = entityManagerFactory.createEntityManager();
+        try {
+            jakarta.persistence.TypedQuery<Long> query = em.createQuery("SELECT COUNT(u) FROM UserEntity u", Long.class);
+            return query.getSingleResult();
+        } catch (Exception e) {
+            logger.error("Error counting users", e);
+            return 0L;
+        } finally {
+            em.close();
+        }
+    }
+
+    @Override
+    public long countByRole(com.syos.shared.enums.UserRole role) {
+        EntityManager em = entityManagerFactory.createEntityManager();
+        try {
+            jakarta.persistence.TypedQuery<Long> query = em.createQuery("SELECT COUNT(u) FROM UserEntity u WHERE u.role = :role", Long.class);
+            query.setParameter("role", role);
+            return query.getSingleResult();
+        } catch (Exception e) {
+            logger.error("Error counting users by role", e);
+            return 0L;
+        } finally {
+            em.close();
+        }
+    }
+
+    @Override
+    public java.util.List<User> searchUsers(String searchTerm) {
+        EntityManager em = entityManagerFactory.createEntityManager();
+        try {
+            String term = searchTerm == null ? "" : searchTerm.trim().toLowerCase();
+            jakarta.persistence.TypedQuery<UserEntity> query = em.createQuery(
+                "SELECT u FROM UserEntity u WHERE LOWER(u.username) LIKE :term OR LOWER(u.email) LIKE :term OR LOWER(u.name) LIKE :term",
+                UserEntity.class
+            );
+            query.setParameter("term", "%" + term + "%");
+            java.util.List<UserEntity> entities = query.getResultList();
+            java.util.List<User> users = new java.util.ArrayList<>();
+            for (UserEntity e : entities) {
+                users.add(mapToDomain(e));
+            }
+            return users;
+        } catch (Exception e) {
+            logger.error("Error searching users", e);
+            return java.util.Collections.emptyList();
+        } finally {
+            em.close();
+        }
     }
     
     public int getUserCount() {

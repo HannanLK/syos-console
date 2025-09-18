@@ -3,8 +3,15 @@ package com.syos.domain.valueobjects;
 import java.math.BigDecimal;
 import java.util.Objects;
 
+/**
+ * Synex Points Value Object
+ * 
+ * Represents loyalty points that customers earn from purchases.
+ * Immutable with business rules embedded.
+ */
 public final class SynexPoints implements Comparable<SynexPoints> {
     private static final BigDecimal ZERO = BigDecimal.ZERO.setScale(2);
+    private static final BigDecimal POINTS_RATE = new BigDecimal("0.01"); // 1% of purchase
     private final BigDecimal value; // scale(2)
 
     private SynexPoints(BigDecimal value) {
@@ -19,6 +26,16 @@ public final class SynexPoints implements Comparable<SynexPoints> {
 
     public static SynexPoints zero() {
         return new SynexPoints(ZERO);
+    }
+
+    /**
+     * Calculate points from purchase amount
+     * Business rule: 1% of purchase amount
+     */
+    public static SynexPoints fromPurchase(Money purchaseAmount) {
+        Objects.requireNonNull(purchaseAmount, "Purchase amount cannot be null");
+        BigDecimal pointsValue = purchaseAmount.toBigDecimal().multiply(POINTS_RATE);
+        return new SynexPoints(pointsValue);
     }
 
     public SynexPoints add(SynexPoints other) {
@@ -38,10 +55,35 @@ public final class SynexPoints implements Comparable<SynexPoints> {
         return new SynexPoints(result);
     }
 
+    /**
+     * Subtract points (for redemption)
+     */
+    public SynexPoints subtract(SynexPoints other) {
+        Objects.requireNonNull(other, "Other points cannot be null");
+        BigDecimal result = this.value.subtract(other.value);
+        if (result.compareTo(BigDecimal.ZERO) < 0) throw new IllegalArgumentException("Insufficient points for redemption");
+        return new SynexPoints(result);
+    }
+
+    /**
+     * Check if sufficient points for redemption
+     */
+    public boolean isGreaterThanOrEqual(SynexPoints other) {
+        Objects.requireNonNull(other, "Other points cannot be null");
+        return this.value.compareTo(other.value) >= 0;
+    }
+
+    /**
+     * Check if zero points
+     */
+    public boolean isZero() {
+        return value.compareTo(BigDecimal.ZERO) == 0;
+    }
+
     public BigDecimal getValue() { return value; }
 
     @Override
-    public String toString() { return value.toPlainString(); }
+    public String toString() { return value.toPlainString() + " points"; }
 
     @Override
     public boolean equals(Object o) {

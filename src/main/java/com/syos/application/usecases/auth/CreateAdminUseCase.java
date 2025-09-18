@@ -5,7 +5,7 @@ import com.syos.domain.entities.User;
 import com.syos.domain.valueobjects.Email;
 import com.syos.domain.valueobjects.Name;
 import com.syos.domain.valueobjects.Username;
-import com.syos.shared.enums.UserRole;
+import com.syos.domain.valueobjects.Password;
 
 import java.util.Objects;
 
@@ -31,8 +31,7 @@ public class CreateAdminUseCase {
             throw new IllegalStateException("Email already registered");
         }
 
-        User user = User.createWithRole(u, rawPassword, n, e, UserRole.ADMIN, null);
-        userRepository.save(user);
-        return user;
+        User user = User.createAdmin(n, u, e, Password.hash(rawPassword));
+        return userRepository.save(user);
     }
 }

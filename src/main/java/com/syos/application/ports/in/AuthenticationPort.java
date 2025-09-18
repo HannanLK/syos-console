@@ -1,16 +1,33 @@
 package com.syos.application.ports.in;
 
+import com.syos.application.dto.commands.AuthCommand;
+import com.syos.application.dto.responses.AuthResponse;
+
 /**
- * Application-facing API for authentication and user provisioning use cases.
- * Adapters (CLI/REST) should depend on this interface only.
+ * Authentication Input Port
+ * 
+ * Defines the contract for authentication operations.
+ * Separated from user management following ISP.
  */
 public interface AuthenticationPort {
-    boolean login(String username, String password);
-    void logout(String username);
-
-    void registerCustomer(String username, String password, String name, String email);
-
-    void createAdmin(String username, String password, String name, String email);
-
-    void createEmployee(String username, String password, String name, String email);
+    
+    /**
+     * Authenticate user login
+     */
+    AuthResponse login(AuthCommand.LoginCommand command);
+    
+    /**
+     * Register new customer
+     */
+    AuthResponse registerCustomer(AuthCommand.RegisterCommand command);
+    
+    /**
+     * Logout current session
+     */
+    void logout(String sessionId);
+    
+    /**
+     * Validate session
+     */
+    boolean isValidSession(String sessionId);
 }

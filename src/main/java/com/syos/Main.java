@@ -47,12 +47,23 @@ public class Main {
     private static WebInventoryRepository webInventoryRepository = null;
 
     public static void main(String[] args) {
-        logger.info("Starting SYOS Console Application with Enhanced Product Management");
+        // Set logging configuration explicitly
+        System.setProperty("logging.config", "classpath:logging/logback.xml");
+        System.setProperty("LOG_HOME", "D:/4th_final/sem1/clean_cod/syos/syos-console/logs");
+        
+        // Set environment-based console logging
+        String environment = System.getProperty("APP_ENV", "production");
+        if ("development".equals(environment)) {
+            System.setProperty("CONSOLE_LOGGING", "true");
+        } else {
+            System.setProperty("CONSOLE_LOGGING", "false");
+        }
+
+        logger.info("Starting SYOS Console Application with Enhanced Product Management - Environment: {}", environment);
         
         // Ensure the log directory exists
         try {
-            String logHome = System.getProperty("LOG_HOME", "logs");
-            Path dir = Paths.get(logHome);
+            Path dir = Paths.get("D:/4th_final/sem1/clean_cod/syos/syos-console/logs");
             java.nio.file.Files.createDirectories(dir);
             logger.info("Log directory: {}", dir.toAbsolutePath());
         } catch (Exception ex) {
@@ -137,13 +148,23 @@ public class Main {
             
             // Initialize menu system with product management
             MenuNavigator navigator = new MenuNavigator(console);
-            EnhancedMenuFactory menuFactory = new EnhancedMenuFactory(
-                console, 
-                navigator, 
-                loginUseCase, 
-                registerUseCase, 
+
+            // Add Product command dependencies
+            com.syos.application.usecases.inventory.AddProductUseCase addProductUseCase =
+                new com.syos.application.usecases.inventory.AddProductUseCase(
+                    itemRepository, brandRepository, categoryRepository, supplierRepository);
+
+            MenuFactory menuFactory = new MenuFactory(
+                console,
+                navigator,
+                loginUseCase,
+                registerUseCase,
                 userRepository,
-                productController
+                addProductUseCase,
+                brandRepository,
+                categoryRepository,
+                supplierRepository,
+                sessionManager
             );
             
             // Display welcome banner

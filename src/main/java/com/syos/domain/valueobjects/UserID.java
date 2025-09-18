@@ -2,32 +2,50 @@ package com.syos.domain.valueobjects;
 
 import java.util.Objects;
 
-public final class UserID implements Comparable<UserID> {
-    private final long value;
+/**
+ * User ID Value Object
+ *
+ * Represents unique identifier for users in the domain.
+ * Immutable and self-validating.
+ */
+public final class UserID {
+    private final Long value;
 
-    private UserID(long value) {
+    private UserID(Long value) {
+        if (value != null && value <= 0) {
+            throw new IllegalArgumentException("User ID must be positive");
+        }
         this.value = value;
     }
 
-    public static UserID of(long value) {
-        if (value <= 0) throw new IllegalArgumentException("UserID must be positive");
+    /**
+     * Create UserID from Long value
+     */
+    public static UserID of(Long value) {
         return new UserID(value);
     }
 
-    public long getValue() {
+    /**
+     * Generate new unique ID placeholder (null until persisted)
+     */
+    public static UserID generate() {
+        return new UserID(null); // Will be assigned by repository
+    }
+
+    public Long getValue() {
         return value;
     }
 
-    @Override
-    public String toString() {
-        return Long.toString(value);
+    public boolean isAssigned() {
+        return value != null;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof UserID userID)) return false;
-        return value == userID.value;
+        if (o == null || getClass() != o.getClass()) return false;
+        UserID userId = (UserID) o;
+        return Objects.equals(value, userId.value);
     }
 
     @Override
@@ -36,7 +54,7 @@ public final class UserID implements Comparable<UserID> {
     }
 
     @Override
-    public int compareTo(UserID o) {
-        return Long.compare(this.value, o.value);
+    public String toString() {
+        return "UserID{" + value + "}";
     }
 }

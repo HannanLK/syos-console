@@ -22,29 +22,27 @@ public class DatabaseInitializer {
         logger.info("Initializing default users in database...");
         
         try {
-            // Create admin user if not exists
-            if (!userRepository.existsByUsername("admin")) {
-                User admin = User.createWithRole(
-                    Username.of("admin"),
-                    "admin12345",
+            // Ensure admin exists or create one
+            User adminUser = userRepository.findByUsername("admin").orElse(null);
+            if (adminUser == null) {
+                User newAdmin = User.createAdmin(
                     Name.of("System Administrator"),
+                    Username.of("admin"),
                     Email.of("admin@syos.com"),
-                    UserRole.ADMIN,
-                    null
+                    Password.hash("admin12345")
                 );
-                userRepository.save(admin);
+                adminUser = userRepository.save(newAdmin);
                 logger.info("Created default admin user");
             }
-            
+
             // Create employee user if not exists
             if (!userRepository.existsByUsername("employee")) {
-                User employee = User.createWithRole(
-                    Username.of("employee"),
-                    "employee123",
+                User employee = User.createEmployee(
                     Name.of("John Employee"),
+                    Username.of("employee"),
                     Email.of("employee@syos.com"),
-                    UserRole.EMPLOYEE,
-                    null
+                    Password.hash("employee123"),
+                    adminUser != null ? adminUser.getId() : null
                 );
                 userRepository.save(employee);
                 logger.info("Created default employee user");
@@ -52,14 +50,13 @@ public class DatabaseInitializer {
             
             // Create customer user if not exists
             if (!userRepository.existsByUsername("customer")) {
-                User customer = User.createWithRole(
+                User customer = User.createCustomer(
                     Username.of("customer"),
-                    "customer123",
-                    Name.of("Jane Customer"),
                     Email.of("customer@example.com"),
-                    UserRole.CUSTOMER,
-                    null
+                    Password.hash("customer123")
                 );
+                // Update name to full name
+                customer = customer.updateProfile(Name.of("Jane Customer"), Email.of("customer@example.com"));
                 userRepository.save(customer);
                 logger.info("Created default customer user");
             }

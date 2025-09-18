@@ -29,6 +29,8 @@
         <testcontainers.version>1.21.3</testcontainers.version>
         <jacoco.version>0.8.13</jacoco.version>
 
+        <!-- Tests enabled: we run unit/integration tests -->
+
         <!-- Logging -->
         <slf4j.version>2.0.17</slf4j.version>
         <logback.version>1.5.18</logback.version>
@@ -312,6 +314,13 @@
                 </executions>
             </plugin>
 
+            <!-- Maven Site Plugin to generate browsable reports -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <version>3.12.1</version>
+            </plugin>
+
             <!-- Flyway Maven Plugin for Database Migration -->
             <plugin>
                 <groupId>org.flywaydb</groupId>
@@ -325,4 +334,21 @@
             </plugin>
         </plugins>
     </build>
+
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>report</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+        </plugins>
+    </reporting>
 </project>

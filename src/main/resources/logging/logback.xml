@@ -7,8 +7,10 @@
 
     <!-- System Properties -->
     <property name="APP_NAME" value="syos"/>
-    <property name="LOG_HOME" value="${LOG_HOME:-logs}"/>
+    <property name="LOG_HOME" value="${LOG_HOME:-D:/4th_final/sem1/clean_cod/syos/syos-console/logs}"/>
     <property name="LOG_LEVEL" value="${LOG_LEVEL:-INFO}"/>
+    <property name="CONSOLE_LOGGING" value="${CONSOLE_LOGGING:-false}"/>
+    <property name="APP_ENV" value="${APP_ENV:-production}"/>
 
     <!-- Log Patterns -->
     <property name="CONSOLE_PATTERN"
@@ -226,6 +228,9 @@
 
     <!-- Hibernate Loggers -->
     <logger name="org.hibernate" level="WARN"/>
+    <!-- Explicitly suppress Hibernate ORM subpackage noise in console -->
+    <logger name="org.hibernate.orm" level="WARN"/>
+    <logger name="org.hibernate.orm.connections.pooling" level="WARN"/>
     <logger name="org.hibernate.SQL" level="WARN" additivity="false">
         <appender-ref ref="SQL_FILE"/>
     </logger>
@@ -250,10 +255,33 @@
     <logger name="org.testcontainers" level="INFO"/>
 
     <!-- ================================================================ -->
+    <!-- ENVIRONMENT-SPECIFIC CONSOLE CONFIGURATION                      -->
+    <!-- ================================================================ -->
+    
+    <!-- Development Mode: Console + File Logging -->
+    <if condition='property("CONSOLE_LOGGING").equals("true")'>
+        <then>
+            <logger name="ROOT_DEV" level="${LOG_LEVEL}">
+                <appender-ref ref="CONSOLE"/>
+                <appender-ref ref="ASYNC_APP_FILE"/>
+                <appender-ref ref="ASYNC_ERROR_FILE"/>
+            </logger>
+        </then>
+    </if>
+
+    <!-- ================================================================ -->
     <!-- ROOT LOGGER                                                     -->
     <!-- ================================================================ -->
 
     <root level="${LOG_LEVEL}">
+        <!-- Console logging only in development mode -->
+        <if condition='property("CONSOLE_LOGGING").equals("true")'>
+            <then>
+                <appender-ref ref="CONSOLE"/>
+            </then>
+        </if>
+        
+        <!-- Always log to files -->
         <appender-ref ref="ASYNC_APP_FILE"/>
         <appender-ref ref="ASYNC_ERROR_FILE"/>
     </root>
