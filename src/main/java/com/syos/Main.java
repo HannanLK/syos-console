@@ -32,6 +32,19 @@ import java.nio.file.Paths;
  * Now includes complete product management workflow
  */
 public class Main {
+    // Ensure logging system properties are set BEFORE any logger is initialized
+    static {
+        // Set logging configuration explicitly
+        System.setProperty("logging.config", "classpath:logging/logback.xml");
+        System.setProperty("LOG_HOME", "D:/4th_final/sem1/clean_cod/syos/syos-console/logs");
+        // Set environment-based console logging
+        String environment = System.getProperty("APP_ENV", "production");
+        if ("development".equals(environment)) {
+            System.setProperty("CONSOLE_LOGGING", "true");
+        } else {
+            System.setProperty("CONSOLE_LOGGING", "false");
+        }
+    }
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     private static final boolean USE_DATABASE = true; // Set to false for in-memory mode
 
@@ -164,7 +177,9 @@ public class Main {
                 brandRepository,
                 categoryRepository,
                 supplierRepository,
-                sessionManager
+                sessionManager,
+                itemRepository,
+                webInventoryRepository
             );
             
             // Display welcome banner

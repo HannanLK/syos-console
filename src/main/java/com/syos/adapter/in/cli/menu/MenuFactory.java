@@ -7,6 +7,8 @@ import com.syos.application.ports.out.UserRepository;
 import com.syos.application.ports.out.BrandRepository;
 import com.syos.application.ports.out.CategoryRepository;
 import com.syos.application.ports.out.SupplierRepository;
+import com.syos.application.ports.out.ItemMasterFileRepository;
+import com.syos.application.ports.out.WebInventoryRepository;
 import com.syos.application.usecases.auth.LoginUseCase;
 import com.syos.application.usecases.auth.RegisterCustomerUseCase;
 import com.syos.application.usecases.inventory.AddProductUseCase;
@@ -28,10 +30,12 @@ public class MenuFactory {
     private final CategoryRepository categoryRepository;
     private final SupplierRepository supplierRepository;
     private final SessionManager sessionManager;
+    private final ItemMasterFileRepository itemRepository;
+    private final WebInventoryRepository webInventoryRepository;
 
     public MenuFactory(ConsoleIO console, MenuNavigator navigator,
-                      LoginUseCase loginUseCase, RegisterCustomerUseCase registerUseCase,
-                      UserRepository userRepository) {
+                     LoginUseCase loginUseCase, RegisterCustomerUseCase registerUseCase,
+                     UserRepository userRepository) {
         this.console = console;
         this.navigator = navigator;
         this.loginUseCase = loginUseCase;
@@ -43,6 +47,8 @@ public class MenuFactory {
         this.categoryRepository = null;
         this.supplierRepository = null;
         this.sessionManager = null;
+        this.itemRepository = null;
+        this.webInventoryRepository = null;
     }
 
     // Overloaded constructor to enable Add Product command and other features
@@ -53,7 +59,9 @@ public class MenuFactory {
                        BrandRepository brandRepository,
                        CategoryRepository categoryRepository,
                        SupplierRepository supplierRepository,
-                       SessionManager sessionManager) {
+                       SessionManager sessionManager,
+                       ItemMasterFileRepository itemRepository,
+                       WebInventoryRepository webInventoryRepository) {
         this.console = console;
         this.navigator = navigator;
         this.loginUseCase = loginUseCase;
@@ -64,6 +72,8 @@ public class MenuFactory {
         this.categoryRepository = categoryRepository;
         this.supplierRepository = supplierRepository;
         this.sessionManager = sessionManager;
+        this.itemRepository = itemRepository;
+        this.webInventoryRepository = webInventoryRepository;
     }
 
     /**
@@ -73,7 +83,7 @@ public class MenuFactory {
         return new Menu.Builder()
             .title("SYNEX OUTLET STORE - Main Menu")
             .addItem(new MenuItem("1", "Browse Products", 
-                new BrowseProductsCommand(console)))
+                new BrowseProductsCommand(console, itemRepository, webInventoryRepository)))
             .addItem(new MenuItem("2", "Login", 
                 new LoginCommand(console, loginUseCase, navigator, this)))
             .addItem(new MenuItem("3", "Register", 
@@ -107,7 +117,7 @@ public class MenuFactory {
         return new Menu.Builder()
             .title("CUSTOMER NAVIGATION MENU")
             .addItem(new MenuItem("1", "Browse Products", 
-                new BrowseProductsCommand(console)))
+                new BrowseProductsCommand(console, itemRepository, webInventoryRepository)))
             .addItem(new MenuItem("2", "View Cart", 
                 createPlaceholderCommand("Shopping Cart")))
             .addItem(new MenuItem("3", "Order History", 

@@ -34,16 +34,26 @@ public class JpaItemMasterFileRepository implements ItemMasterFileRepository {
 
     @Override
     public ItemMasterFile save(ItemMasterFile item) {
-        ItemMasterFileEntity entity = item.getId() == null ? 
-            mapToNewEntity(item) : updateExistingEntity(item);
-        
-        if (entity.getId() == null) {
-            entityManager.persist(entity);
-        } else {
-            entity = entityManager.merge(entity);
+        entityManager.getTransaction().begin();
+        try {
+            ItemMasterFileEntity entity = item.getId() == null ?
+                mapToNewEntity(item) : updateExistingEntity(item);
+
+            if (entity.getId() == null) {
+                entityManager.persist(entity);
+                entityManager.flush(); // ensure ID is generated
+            } else {
+                entity = entityManager.merge(entity);
+            }
+
+            entityManager.getTransaction().commit();
+            return mapToDomain(entity);
+        } catch (RuntimeException ex) {
+            if (entityManager.getTransaction().isActive()) {
+                entityManager.getTransaction().rollback();
+            }
+            throw ex;
         }
-        
-        return mapToDomain(entity);
     }
 
     @Override

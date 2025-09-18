@@ -104,7 +104,10 @@ public class LoginCommand implements Command {
         console.println("║                                      ║");
         console.println("║  Username: " + padRight(user.getUsername().getValue(), 25) + " ║");
         console.println("║  Email: " + padRight(user.getEmail().getValue(), 28) + " ║");
-        console.println("║  Synex Points: " + padRight(String.format("%.2f", user.getSynexPoints().getValue()), 21) + " ║");
+        // Show Synex Points only for customers
+        if (user.getRole() == com.syos.shared.enums.UserRole.CUSTOMER) {
+            console.println("║  Synex Points: " + padRight(String.format("%.2f", user.getSynexPoints().getValue()), 21) + " ║");
+        }
         console.println("║  Member Since: " + padRight(memberSince, 21) + " ║");
         console.println("║                                      ║");
         console.println("╚══════════════════════════════════════╝");
