@@ -35,6 +35,17 @@ public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     private static final boolean USE_DATABASE = true; // Set to false for in-memory mode
 
+    // Repository fields
+    private static UserRepository userRepository = null;
+    private static ItemMasterFileRepository itemRepository = null;
+    private static BrandRepository brandRepository = null;
+    private static CategoryRepository categoryRepository = null;
+    private static SupplierRepository supplierRepository = null;
+    private static BatchRepository batchRepository = null;
+    private static WarehouseStockRepository warehouseStockRepository = null;
+    private static ShelfStockRepository shelfStockRepository = null;
+    private static WebInventoryRepository webInventoryRepository = null;
+
     public static void main(String[] args) {
         logger.info("Starting SYOS Console Application with Enhanced Product Management");
         
@@ -47,17 +58,6 @@ public class Main {
         } catch (Exception ex) {
             logger.warn("Could not ensure log directory exists", ex);
         }
-        
-        // Repository declarations
-        UserRepository userRepository = null;
-        ItemMasterFileRepository itemRepository = null;
-        BrandRepository brandRepository = null;
-        CategoryRepository categoryRepository = null;
-        SupplierRepository supplierRepository = null;
-        BatchRepository batchRepository = null;
-        WarehouseStockRepository warehouseStockRepository = null;
-        ShelfStockRepository shelfStockRepository = null;
-        WebInventoryRepository webInventoryRepository = null;
         
         EntityManagerFactory emf = null;
         
@@ -180,10 +180,20 @@ public class Main {
     }
 
     private static void initializeInMemoryRepositories() {
-        // Initialize in-memory repositories for fallback
-        // These would be implemented similar to existing InMemoryUserRepository
         logger.info("Initializing in-memory repositories...");
-        // Implementation would go here for in-memory fallback
+        
+        // Initialize all in-memory repositories
+        userRepository = new InMemoryUserRepository();
+        itemRepository = new com.syos.adapter.out.persistence.memory.InMemoryItemMasterFileRepository();
+        brandRepository = new com.syos.adapter.out.persistence.memory.InMemoryBrandRepository();
+        categoryRepository = new com.syos.adapter.out.persistence.memory.InMemoryCategoryRepository();
+        supplierRepository = new com.syos.adapter.out.persistence.memory.InMemorySupplierRepository();
+        batchRepository = new com.syos.adapter.out.persistence.memory.InMemoryBatchRepository();
+        warehouseStockRepository = new com.syos.adapter.out.persistence.memory.InMemoryWarehouseStockRepository();
+        shelfStockRepository = new com.syos.adapter.out.persistence.memory.InMemoryShelfStockRepository();
+        webInventoryRepository = new com.syos.adapter.out.persistence.memory.InMemoryWebInventoryRepository();
+        
+        logger.info("In-memory repositories initialized successfully");
     }
 
     private static ShelfStockRepository createInMemoryShelfStockRepository() {

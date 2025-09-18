@@ -3,6 +3,8 @@ package com.syos.infrastructure.persistence;
 import com.syos.shared.enums.UserRole;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
@@ -25,8 +27,10 @@ public class UserEntity {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
     
+    // Map to PostgreSQL enum (user_role)
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(nullable = false, columnDefinition = "user_role")
     private UserRole role;
     
     @Column(nullable = false)

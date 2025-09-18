@@ -113,6 +113,9 @@ public class DatabaseConfig {
         properties.put("hibernate.hbm2ddl.auto", "validate"); // Only validate, don't create/update
         properties.put("hibernate.default_schema", "public");
         
+        // Prefer PostgreSQL native enum mapping
+        properties.put("hibernate.type.preferred_enum_type", "postgres_enum");
+        
         // SQL logging (development)
         properties.put("hibernate.show_sql", "false");
         properties.put("hibernate.format_sql", "true");
@@ -127,14 +130,9 @@ public class DatabaseConfig {
         properties.put("hibernate.jdbc.batch_versioned_data", "true");
         properties.put("hibernate.id.new_generator_mappings", "true");
         
-        // Connection pool settings (HikariCP)
-        properties.put("hibernate.connection.provider_class", "org.hibernate.hikari.internal.HikariCPConnectionProvider");
-        properties.put("hibernate.hikari.minimumIdle", "5");
-        properties.put("hibernate.hikari.maximumPoolSize", "20");
-        properties.put("hibernate.hikari.idleTimeout", "300000");
-        properties.put("hibernate.hikari.connectionTimeout", "20000");
-        properties.put("hibernate.hikari.maxLifetime", "1200000");
-        properties.put("hibernate.hikari.poolName", "SYOSHikariPool");
+        // Connection pool settings (Use default Hibernate connection provider)
+        // Remove custom connection provider to avoid version conflicts
+        properties.put("hibernate.connection.pool_size", "10");
         
         // Transaction and session management
         properties.put("hibernate.connection.autocommit", "false");

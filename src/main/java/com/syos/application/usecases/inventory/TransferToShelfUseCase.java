@@ -18,23 +18,19 @@ import java.util.Objects;
  * Use case: Transfer stock from Warehouse to Shelf using the configured StockSelectionStrategy.
  */
 public class TransferToShelfUseCase {
-    private final WarehouseStockRepository warehouseRepo;
-    private final ShelfStockRepository shelfRepo;
-    private final StockTransferRepository transferRepo;
-    private final StockSelectionStrategy strategy;
 
     public TransferToShelfUseCase(WarehouseStockRepository warehouseRepo,
                                   ShelfStockRepository shelfRepo,
                                   StockTransferRepository transferRepo,
                                   StockSelectionStrategy strategy) {
-        this.warehouseRepo = Objects.requireNonNull(warehouseRepo);
-        this.shelfRepo = Objects.requireNonNull(shelfRepo);
-        this.transferRepo = Objects.requireNonNull(transferRepo);
-        this.strategy = Objects.requireNonNull(strategy);
+        WarehouseStockRepository warehouseRepo1 = Objects.requireNonNull(warehouseRepo);
+        ShelfStockRepository shelfRepo1 = Objects.requireNonNull(shelfRepo);
+        StockTransferRepository transferRepo1 = Objects.requireNonNull(transferRepo);
+        StockSelectionStrategy strategy1 = Objects.requireNonNull(strategy);
     }
 
     public void transfer(long itemId, BigDecimal quantity) {
-        // Legacy use case not aligned with current repository ports.
+        // Legacy use case isn't aligned with current repository ports.
         // Product transfers are handled by CompleteProductManagementUseCase.
         throw new UnsupportedOperationException("TransferToShelfUseCase is deprecated. Use CompleteProductManagementUseCase.transferToShelf()");
     }
