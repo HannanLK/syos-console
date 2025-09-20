@@ -9,11 +9,17 @@ public class RegisterRequest {
     private final String email;
     private final String name;
 
-    public RegisterRequest(String username, String password, String email, String name) {
+    // Preferred constructor used by integration tests (username, password, name, email)
+    public RegisterRequest(String username, String password, String name, String email) {
         this.username = username;
         this.password = password;
         this.email = email;
         this.name = name;
+    }
+
+    // Factory for legacy ordering (name, username, email, password)
+    public static RegisterRequest fromLegacy(String name, String username, String email, String password) {
+        return new RegisterRequest(username, password, name, email);
     }
 
     public String getUsername() { return username; }

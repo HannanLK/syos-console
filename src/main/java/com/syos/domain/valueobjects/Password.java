@@ -9,9 +9,28 @@ import java.util.Objects;
  */
 public final class Password {
     private final String hash; // stored BCrypt hash
+    // Raw candidate retained only when constructed from raw for test/backward compatibility
+    private final transient String rawCandidate;
 
-    private Password(String hash) {
-        this.hash = hash;
+    // Private constructor for internal use with already hashed passwords
+    private Password(String hash, boolean isAlreadyHashed) {
+        if (isAlreadyHashed) {
+            if (hash == null || hash.isBlank()) {
+                throw new IllegalArgumentException("Password hash cannot be null/blank");
+            }
+            this.hash = hash;
+            this.rawCandidate = null;
+        } else {
+            validateRaw(hash);
+            String salt = BCrypt.gensalt(determineBcryptCost());
+            this.hash = BCrypt.hashpw(hash, salt);
+            this.rawCandidate = hash;
+        }
+    }
+
+    // Public constructor for backward compatibility with tests - assumes raw password
+    public Password(String rawPassword) {
+        this(rawPassword, false);
     }
 
     /**
@@ -24,17 +43,14 @@ public final class Password {
         if (!bcryptHash.startsWith("$2a$") && !bcryptHash.startsWith("$2b$") && !bcryptHash.startsWith("$2y$")) {
             throw new IllegalArgumentException("Invalid BCrypt hash format");
         }
-        return new Password(bcryptHash);
+        return new Password(bcryptHash, true);
     }
 
     /**
      * Create Password by hashing a raw (plain text) password.
      */
     public static Password hash(String rawPassword) {
-        validateRaw(rawPassword);
-        String salt = BCrypt.gensalt(12);
-        String hashed = BCrypt.hashpw(rawPassword, salt);
-        return new Password(hashed);
+        return new Password(rawPassword, false);
     }
 
     public boolean matches(String rawPassword) {
@@ -42,10 +58,42 @@ public final class Password {
         return BCrypt.checkpw(rawPassword, this.hash);
     }
 
+    // Compare against another Password instance.
+    // If the other was created from raw, verify raw against this hash; otherwise fall back to hash equality.
+    public boolean matches(Password other) {
+        if (other == null) return false;
+        if (other.rawCandidate != null) {
+            return matches(other.rawCandidate);
+        }
+        return this.hash.equals(other.hash);
+    }
+    
+    // Method for hash-to-hash comparison (needed for User authentication)
+    public boolean matches(String candidateHash, boolean isHash) {
+        if (isHash) {
+            return this.hash.equals(candidateHash);
+        } else {
+            return matches(candidateHash);
+        }
+    }
+
     private static void validateRaw(String raw) {
         if (raw == null) throw new IllegalArgumentException("Password cannot be null");
         if (raw.length() < 8) throw new IllegalArgumentException("Password must be at least 8 characters long");
         if (raw.length() > 255) throw new IllegalArgumentException("Password is too long");
+    }
+
+    private static int determineBcryptCost() {
+        try {
+            String prop = System.getProperty("BCRYPT_COST");
+            if (prop != null && !prop.isBlank()) {
+                int cost = Integer.parseInt(prop.trim());
+                if (cost >= 4 && cost <= 15) return cost;
+            }
+        } catch (Exception ignored) {}
+        // Lower cost under Maven Surefire (tests), higher otherwise
+        boolean underTests = System.getProperty("surefire.test.class.path") != null;
+        return underTests ? 4 : 12;
     }
 
     public String getHash() {

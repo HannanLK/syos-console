@@ -12,8 +12,9 @@ public class ReorderPoint {
     public static final int DEFAULT_REORDER_POINT = 50;
     public static final int MINIMUM_REORDER_POINT = 0;
     public static final int MAXIMUM_REORDER_POINT = 10000;
-
-    private ReorderPoint(Integer value) {
+    
+    // Public constructor for backward compatibility with tests
+    public ReorderPoint(Integer value) {
         if (value == null || value < MINIMUM_REORDER_POINT || value > MAXIMUM_REORDER_POINT) {
             throw new IllegalArgumentException(
                 String.format("Reorder point must be between %d and %d", 

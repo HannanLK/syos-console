@@ -289,8 +289,8 @@ class InMemoryUserRepositoryTest {
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("User cannot be null");
 
-        assertThat(repository.findByUsername(null)).isEmpty();
-        assertThat(repository.existsByUsername(null)).isFalse();
+        assertThat(repository.findByUsername((String) null)).isEmpty();
+        assertThat(repository.existsByUsername((String) null)).isFalse();
         assertThat(repository.existsByEmail(null)).isFalse();
     }
 

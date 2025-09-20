@@ -312,4 +312,99 @@ public class JpaUserRepository implements UserRepository {
             em.close();
         }
     }
+
+    // Missing methods from UserRepository interface
+    @Override
+    public Optional<User> findById(UserID userId) {
+        if (userId == null || userId.getValue() == null) return Optional.empty();
+        return findById(userId.getValue());
+    }
+
+    @Override
+    public Optional<User> findByUsername(Username username) {
+        if (username == null) return Optional.empty();
+        return findByUsername(username.getValue());
+    }
+
+    @Override
+    public boolean existsByUsername(Username username) {
+        if (username == null) return false;
+        return existsByUsername(username.getValue());
+    }
+
+    @Override
+    public void delete(User user) {
+        if (user == null || user.getId() == null) return;
+        deleteById(user.getId());
+    }
+
+    @Override
+    public void deleteById(UserID userId) {
+        if (userId == null || userId.getValue() == null) return;
+        
+        EntityManager em = entityManagerFactory.createEntityManager();
+        try {
+            em.getTransaction().begin();
+            
+            UserEntity entity = em.find(UserEntity.class, userId.getValue());
+            if (entity != null) {
+                em.remove(entity);
+                logger.info("Deleted user: {} (ID: {})", entity.getUsername(), userId.getValue());
+            }
+            
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            logger.error("Error deleting user with ID: {}", userId.getValue(), e);
+            throw new RuntimeException("Failed to delete user", e);
+        } finally {
+            em.close();
+        }
+    }
+
+    @Override
+    public boolean existsById(UserID userId) {
+        if (userId == null || userId.getValue() == null) return false;
+        
+        EntityManager em = entityManagerFactory.createEntityManager();
+        try {
+            TypedQuery<Long> query = em.createQuery(
+                "SELECT COUNT(u) FROM UserEntity u WHERE u.id = :id", Long.class);
+            query.setParameter("id", userId.getValue());
+            return query.getSingleResult() > 0;
+        } catch (Exception e) {
+            logger.error("Error checking user existence by ID: {}", userId.getValue(), e);
+            return false;
+        } finally {
+            em.close();
+        }
+    }
+
+    @Override
+    public long count() {
+        return countAll();
+    }
+
+    @Override
+    public void deleteAll() {
+        EntityManager em = entityManagerFactory.createEntityManager();
+        try {
+            em.getTransaction().begin();
+            
+            int deletedCount = em.createQuery("DELETE FROM UserEntity").executeUpdate();
+            logger.info("Deleted all {} users from database", deletedCount);
+            
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            logger.error("Error deleting all users", e);
+            throw new RuntimeException("Failed to delete all users", e);
+        } finally {
+            em.close();
+        }
+    }
 }

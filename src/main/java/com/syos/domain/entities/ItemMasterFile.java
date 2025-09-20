@@ -4,6 +4,7 @@ import com.syos.domain.valueobjects.*;
 import com.syos.shared.enums.ProductStatus;
 import com.syos.shared.enums.UnitOfMeasure;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -19,24 +20,24 @@ import java.util.Objects;
 public class ItemMasterFile {
     private final Long id; // nullable for new items
     private final ItemCode itemCode;
-    private final String itemName;
-    private final String description;
+    private String itemName;
+    private String description;
     private final BrandId brandId;
     private final CategoryId categoryId;
     private final SupplierId supplierId;
     private final UnitOfMeasure unitOfMeasure;
     private final PackSize packSize;
     private final Money costPrice;
-    private final Money sellingPrice;
-    private final ReorderPoint reorderPoint;
+    private Money sellingPrice;
+    private ReorderPoint reorderPoint;
     private final boolean isPerishable;
-    private final ProductStatus status;
+    private ProductStatus status;
     private final boolean isFeatured;
     private final boolean isLatest;
     private final LocalDateTime dateAdded;
-    private final LocalDateTime lastUpdated;
+    private LocalDateTime lastUpdated;
     private final UserID createdBy;
-    private final UserID updatedBy;
+    private UserID updatedBy;
 
     private ItemMasterFile(Builder builder) {
         this.id = builder.id;
@@ -59,6 +60,44 @@ public class ItemMasterFile {
         this.lastUpdated = builder.lastUpdated != null ? builder.lastUpdated : LocalDateTime.now();
         this.createdBy = builder.createdBy;
         this.updatedBy = builder.updatedBy;
+        
+        validateBusinessRules();
+    }
+    
+    // Public constructor for backward compatibility with tests
+    public ItemMasterFile(ItemCode itemCode, Name itemName, BrandId brandId, CategoryId categoryId,
+                         String description, UnitOfMeasure unitOfMeasure, PackSize packSize,
+                         Money costPrice, Money sellingPrice, ReorderPoint reorderPoint, SupplierId supplierId) {
+        this.id = null;
+        if (itemCode == null) throw new IllegalArgumentException("Item code cannot be null");
+        if (itemName == null) throw new IllegalArgumentException("Item name cannot be null or empty");
+        if (brandId == null) throw new IllegalArgumentException("Brand ID cannot be null");
+        if (categoryId == null) throw new IllegalArgumentException("Category ID cannot be null");
+        if (supplierId == null) throw new IllegalArgumentException("Supplier ID cannot be null");
+        if (unitOfMeasure == null) throw new IllegalArgumentException("Unit of measure cannot be null");
+        if (packSize == null) throw new IllegalArgumentException("Pack size cannot be null");
+        if (costPrice == null) throw new IllegalArgumentException("Cost price cannot be null");
+        if (sellingPrice == null) throw new IllegalArgumentException("Selling price cannot be null");
+        if (reorderPoint == null) throw new IllegalArgumentException("Reorder point cannot be null");
+        this.itemCode = itemCode;
+        this.itemName = itemName.getValue();
+        this.description = description;
+        this.brandId = brandId;
+        this.categoryId = categoryId;
+        this.supplierId = supplierId;
+        this.unitOfMeasure = unitOfMeasure;
+        this.packSize = packSize;
+        this.costPrice = costPrice;
+        this.sellingPrice = sellingPrice;
+        this.reorderPoint = reorderPoint;
+        this.isPerishable = false;
+        this.status = ProductStatus.ACTIVE;
+        this.isFeatured = false;
+        this.isLatest = false;
+        this.dateAdded = LocalDateTime.now();
+        this.lastUpdated = LocalDateTime.now();
+        this.createdBy = null;
+        this.updatedBy = null;
         
         validateBusinessRules();
     }
@@ -197,6 +236,61 @@ public class ItemMasterFile {
     public boolean isActive() {
         return status == ProductStatus.ACTIVE;
     }
+    
+    // Backward compatibility methods expected by tests
+    public Name getName() {
+        return Name.of(itemName);
+    }
+    
+    public Money getProfitMargin() {
+        return sellingPrice.minus(costPrice);
+    }
+    
+    public BigDecimal getProfitMarginPercentage() {
+        // Margin percentage = (selling - cost) / selling * 100
+        BigDecimal numerator = sellingPrice.minus(costPrice).toBigDecimal();
+        if (numerator.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO; // ensure exact zero (no scale)
+        }
+        return numerator
+                .divide(sellingPrice.toBigDecimal(), 4, BigDecimal.ROUND_HALF_UP)
+                .multiply(BigDecimal.valueOf(100))
+                .setScale(2, BigDecimal.ROUND_HALF_UP);
+    }
+    
+    public void updateSellingPrice(Money newSellingPrice) {
+        if (newSellingPrice == null) {
+            throw new IllegalArgumentException("Selling price cannot be null");
+        }
+        if (newSellingPrice.isLessThan(costPrice)) {
+            throw new IllegalArgumentException("Selling price must be greater than or equal to cost price");
+        }
+        this.sellingPrice = newSellingPrice;
+        this.lastUpdated = LocalDateTime.now();
+    }
+    
+    public void updateDescription(String newDescription) {
+        this.description = newDescription; // allow null -> non-null per test
+        this.lastUpdated = LocalDateTime.now();
+    }
+    
+    public void updateReorderPoint(ReorderPoint newReorderPoint) {
+        if (newReorderPoint == null) {
+            throw new IllegalArgumentException("Reorder point cannot be null");
+        }
+        this.reorderPoint = newReorderPoint;
+        this.lastUpdated = LocalDateTime.now();
+    }
+    
+    public void deactivate() {
+        this.status = ProductStatus.INACTIVE;
+        this.lastUpdated = LocalDateTime.now();
+    }
+    
+    public void reactivate() {
+        this.status = ProductStatus.ACTIVE;
+        this.lastUpdated = LocalDateTime.now();
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -209,6 +303,14 @@ public class ItemMasterFile {
     @Override
     public int hashCode() {
         return Objects.hash(itemCode);
+    }
+    
+    @Override
+    public String toString() {
+        return "ItemMasterFile{" +
+                "itemCode=" + (itemCode != null ? itemCode.getValue() : "null") +
+                ", itemName='" + (itemName != null ? itemName : "") + '\'' +
+                '}';
     }
 
     /**

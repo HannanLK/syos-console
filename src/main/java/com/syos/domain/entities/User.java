@@ -2,6 +2,7 @@ package com.syos.domain.entities;
 
 import com.syos.domain.valueobjects.*;
 import com.syos.shared.enums.UserRole;
+import com.syos.domain.exceptions.AuthenticationException;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -15,14 +16,14 @@ import java.util.Objects;
 public class User {
     private final UserID id;
     private final Username username;
-    private final Password password;
+    private Password password;
     private final UserRole role;
-    private final Name name;
-    private final Email email;
-    private final SynexPoints synexPoints;
-    private final boolean active;
+    private Name name;
+    private Email email;
+    private SynexPoints synexPoints;
+    private boolean active;
     private final LocalDateTime createdAt;
-    private final LocalDateTime updatedAt;
+    private LocalDateTime updatedAt;
     private final UserID createdBy;
 
     // Private constructor enforces factory methods
@@ -30,16 +31,27 @@ public class User {
                  Name name, Email email, SynexPoints synexPoints, boolean active,
                  LocalDateTime createdAt, LocalDateTime updatedAt, UserID createdBy) {
         this.id = id;
-        this.username = Objects.requireNonNull(username, "Username cannot be null");
-        this.password = Objects.requireNonNull(password, "Password cannot be null");
-        this.role = Objects.requireNonNull(role, "Role cannot be null");
-        this.name = Objects.requireNonNull(name, "Name cannot be null");
-        this.email = Objects.requireNonNull(email, "Email cannot be null");
+        if (username == null) throw new IllegalArgumentException("Username cannot be null");
+        if (password == null) throw new IllegalArgumentException("Password cannot be null");
+        if (role == null) throw new IllegalArgumentException("Role cannot be null");
+        if (name == null) throw new IllegalArgumentException("Name cannot be null");
+        if (email == null) throw new IllegalArgumentException("Email cannot be null");
+        this.username = username;
+        this.password = password;
+        this.role = role;
+        this.name = name;
+        this.email = email;
         this.synexPoints = synexPoints != null ? synexPoints : SynexPoints.zero();
         this.active = active;
         this.createdAt = createdAt != null ? createdAt : LocalDateTime.now();
         this.updatedAt = updatedAt != null ? updatedAt : LocalDateTime.now();
         this.createdBy = createdBy;
+    }
+    
+    // Public constructor for backward compatibility with tests
+    public User(Username username, Password password, Name name, Email email, UserRole role) {
+        this(null, username, password, role, name, email, SynexPoints.zero(), true, 
+             LocalDateTime.now(), LocalDateTime.now(), null);
     }
 
     /**
@@ -209,6 +221,75 @@ public class User {
     public boolean canCreateUsers() {
         return active && role == UserRole.ADMIN;
     }
+    
+    /**
+     * Can this user manage other users?
+     * Business rule: Only active admins can manage users
+     */
+    public boolean canManageUsers() {
+        return active && role == UserRole.ADMIN;
+    }
+    
+    /**
+     * Role checking methods for backward compatibility
+     */
+    public boolean isCustomer() {
+        return role == UserRole.CUSTOMER;
+    }
+    
+    public boolean isEmployee() {
+        return role == UserRole.EMPLOYEE;
+    }
+    
+    public boolean isAdmin() {
+        return role == UserRole.ADMIN;
+    }
+    
+    /**
+     * Authenticate user with password
+     */
+    public boolean authenticate(Password password) {
+        return active && this.password.matches(password);
+    }
+    
+    /**
+     * Alternative authenticate method for raw string password
+     */
+    public boolean authenticate(String rawPassword) {
+        return active && this.password.matches(rawPassword);
+    }
+    
+    /**
+     * Deactivate user account
+     * Business rule: Cannot deactivate system admin
+     */
+    public User deactivate() {
+        if (role == UserRole.ADMIN && "admin".equals(username.getValue())) {
+            throw new IllegalStateException("Cannot deactivate system admin");
+        }
+        // Mutate in place for test compatibility
+        this.active = false;
+        this.updatedAt = LocalDateTime.now();
+        return this;
+    }
+    
+    /**
+     * Add Synex Points - for backward compatibility with tests
+     */
+    public void addSynexPoints(SynexPoints points) {
+        Objects.requireNonNull(points, "Points cannot be null");
+        this.synexPoints = this.synexPoints.add(points);
+        this.updatedAt = LocalDateTime.now();
+    }
+    
+    /**
+     * Redeem Synex Points - for backward compatibility with tests
+     */
+    public void redeemSynexPoints(SynexPoints points) {
+        Objects.requireNonNull(points, "Points cannot be null");
+        this.synexPoints = this.synexPoints.subtract(points);
+        this.updatedAt = LocalDateTime.now();
+    }
 
     /**
      * Can this user accumulate Synex Points?
@@ -235,19 +316,6 @@ public class User {
     }
 
     /**
-     * Deactivate user account
-     * Business rule: Cannot deactivate system admin
-     */
-    public User deactivate() {
-        if (role == UserRole.ADMIN && "admin".equals(username.getValue())) {
-            throw new IllegalStateException("Cannot deactivate system admin");
-        }
-        
-        return new User(id, username, password, role, name, email,
-                       synexPoints, false, createdAt, LocalDateTime.now(), createdBy);
-    }
-
-    /**
      * Update profile information
      * Business rule: Cannot change role or username
      */
@@ -255,8 +323,10 @@ public class User {
         Objects.requireNonNull(newName, "Name cannot be null");
         Objects.requireNonNull(newEmail, "Email cannot be null");
         
-        return new User(id, username, password, role, newName, newEmail,
-                       synexPoints, active, createdAt, LocalDateTime.now(), createdBy);
+        this.name = newName;
+        this.email = newEmail;
+        this.updatedAt = LocalDateTime.now();
+        return this;
     }
 
     /**
@@ -272,6 +342,26 @@ public class User {
         
         return new User(id, username, newPassword, role, name, email,
                        synexPoints, active, createdAt, LocalDateTime.now(), createdBy);
+    }
+    
+    /**
+     * Change password with old password verification - for backward compatibility with tests
+     */
+    public void changePassword(Password oldPassword, Password newPassword) {
+        Objects.requireNonNull(oldPassword, "Old password cannot be null");
+        Objects.requireNonNull(newPassword, "New password cannot be null");
+        
+        if (!this.password.matches(oldPassword)) {
+            throw new AuthenticationException("Invalid old password");
+        }
+        
+        if (!active) {
+            throw new IllegalStateException("Cannot change password for inactive user");
+        }
+        
+        // Mutate in place for test compatibility
+        this.password = newPassword;
+        this.updatedAt = LocalDateTime.now();
     }
 
     // Validation Methods

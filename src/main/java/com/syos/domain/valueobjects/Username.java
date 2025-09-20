@@ -6,12 +6,12 @@ import java.util.Objects;
 public final class Username {
     private final String value;
 
-    private Username(String value) {
-        this.value = value;
+    // Public constructor for backward compatibility with tests
+    public Username(String value) {
+        this.value = validateAndNormalize(value);
     }
 
-    public static Username of(String value) {
-        // Normalize input and validate
+    private static String validateAndNormalize(String value) {
         if (value == null || value.trim().isEmpty()) {
             throw new InvalidUsernameException("Username cannot be empty");
         }
@@ -29,7 +29,11 @@ public final class Username {
         if (!normalized.matches("[a-z0-9_]+")) {
             throw new InvalidUsernameException("Username may contain letters, numbers, and underscores only");
         }
-        return new Username(normalized);
+        return normalized;
+    }
+
+    public static Username of(String value) {
+        return new Username(validateAndNormalize(value));
     }
 
     public String getValue() {

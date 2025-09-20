@@ -10,6 +10,8 @@ import com.syos.application.ports.in.AuthenticationPort;
 import com.syos.application.ports.in.UserManagementPort;
 import com.syos.application.ports.out.*;
 import com.syos.application.usecases.auth.AuthenticationUseCase;
+import com.syos.application.usecases.auth.LoginUseCase;
+import com.syos.application.usecases.auth.RegisterCustomerUseCase;
 import com.syos.application.usecases.user.UserManagementUseCase;
 import com.syos.application.usecases.inventory.AddProductUseCase;
 import com.syos.application.usecases.auth.CreateEmployeeUseCase;
@@ -150,10 +152,23 @@ public class ServiceContainer {
         );
     }
 
+    private com.syos.application.usecases.auth.LoginUseCase createLoginUseCase() {
+        return new com.syos.application.usecases.auth.LoginUseCase(userRepository);
+    }
+
+    private com.syos.application.usecases.auth.RegisterCustomerUseCase createRegisterCustomerUseCase() {
+        return new com.syos.application.usecases.auth.RegisterCustomerUseCase(userRepository);
+    }
+
     // Factory methods for Controllers
 
     private AuthenticationController createAuthController() {
-        return new AuthenticationController();
+        return new AuthenticationController(
+            console,
+            sessionManager,
+            createLoginUseCase(),
+            createRegisterCustomerUseCase()
+        );
     }
 
     private AdminController createAdminController() {

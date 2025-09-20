@@ -60,6 +60,11 @@ public final class AuthResponse {
     public String getUsername() { return username; }
     public UserRole getRole() { return role; }
     public String getToken() { return token; }
+    
+    // Additional getters for testing compatibility
+    public UserRole getUserRole() { return role; }
+    public String getSessionToken() { return sessionId; }
+    public String getErrorMessage() { return success ? null : message; }
 
     @Override
     public String toString() {

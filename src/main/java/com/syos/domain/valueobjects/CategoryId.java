@@ -9,7 +9,8 @@ import java.util.Objects;
 public class CategoryId {
     private final Long value;
 
-    private CategoryId(Long value) {
+    // Public constructor for backward compatibility with tests
+    public CategoryId(Long value) {
         if (value == null || value <= 0) {
             throw new IllegalArgumentException("Category ID must be positive");
         }

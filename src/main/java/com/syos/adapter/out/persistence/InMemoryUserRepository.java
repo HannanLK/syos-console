@@ -162,12 +162,12 @@ public class InMemoryUserRepository implements UserRepository {
                 user.getCreatedBy()
             );
             saveUserDirectly(savedUser);
-            logger.info("Saved new user: {} with ID: {} and role: {}", 
+            logger.trace("Saved new user: {} with ID: {} and role: {}", 
                 savedUser.getUsername().getValue(), newId, savedUser.getRole());
         } else {
             savedUser = user;
             saveUserDirectly(savedUser);
-            logger.info("Updated existing user: {} with role: {}", 
+            logger.trace("Updated existing user: {} with role: {}", 
                 savedUser.getUsername().getValue(), savedUser.getRole());
         }
         
@@ -251,5 +251,62 @@ public class InMemoryUserRepository implements UserRepository {
     public Optional<User> findById(Long id) {
         if (id == null) return Optional.empty();
         return Optional.ofNullable(usersById.get(id));
+    }
+
+    // Missing methods from UserRepository interface
+    @Override
+    public Optional<User> findById(UserID userId) {
+        if (userId == null || userId.getValue() == null) return Optional.empty();
+        return findById(userId.getValue());
+    }
+
+    @Override
+    public Optional<User> findByUsername(Username username) {
+        if (username == null) return Optional.empty();
+        return findByUsername(username.getValue());
+    }
+
+    @Override
+    public boolean existsByUsername(Username username) {
+        if (username == null) return false;
+        return existsByUsername(username.getValue());
+    }
+
+    @Override
+    public void delete(User user) {
+        if (user == null || user.getId() == null) return;
+        deleteById(user.getId());
+    }
+
+    @Override
+    public void deleteById(UserID userId) {
+        if (userId == null || userId.getValue() == null) return;
+        
+        User user = usersById.remove(userId.getValue());
+        if (user != null) {
+            usersByUsername.remove(user.getUsername().getValue().toLowerCase());
+            usersByEmail.remove(user.getEmail().getValue().toLowerCase());
+            logger.info("Deleted user: {} (ID: {})", user.getUsername().getValue(), userId.getValue());
+        }
+    }
+
+    @Override
+    public boolean existsById(UserID userId) {
+        if (userId == null || userId.getValue() == null) return false;
+        return usersById.containsKey(userId.getValue());
+    }
+
+    @Override
+    public long count() {
+        return usersById.size();
+    }
+
+    @Override
+    public void deleteAll() {
+        usersByUsername.clear();
+        usersByEmail.clear();
+        usersById.clear();
+        nextId = 1L;
+        logger.trace("Deleted all users from repository");
     }
 }

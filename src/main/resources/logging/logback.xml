@@ -213,6 +213,10 @@
     <logger name="com.syos.adapter" level="INFO"/>
     <logger name="com.syos.infrastructure" level="INFO"/>
 
+    <!-- Suppress noisy auth logs during build/tests -->
+    <logger name="com.syos.application.usecases.auth.LoginUseCase" level="WARN"/>
+    <logger name="com.syos.application.usecases.auth.RegisterCustomerUseCase" level="WARN"/>
+
     <!-- Domain Events -->
     <logger name="com.syos.domain.events" level="DEBUG"/>
 

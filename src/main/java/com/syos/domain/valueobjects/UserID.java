@@ -11,11 +11,18 @@ import java.util.Objects;
 public final class UserID {
     private final Long value;
 
-    private UserID(Long value) {
+    /**
+     * Public constructor for backward compatibility
+     */
+    public UserID(Long value) {
         if (value != null && value <= 0) {
             throw new IllegalArgumentException("User ID must be positive");
         }
         this.value = value;
+    }
+
+    private UserID(Long value, boolean validated) {
+        this.value = value; // Used only by factory methods with pre-validation
     }
 
     /**
@@ -29,7 +36,7 @@ public final class UserID {
      * Generate new unique ID placeholder (null until persisted)
      */
     public static UserID generate() {
-        return new UserID(null); // Will be assigned by repository
+        return new UserID(null, true); // Will be assigned by repository
     }
 
     public Long getValue() {

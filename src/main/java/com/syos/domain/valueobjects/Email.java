@@ -8,11 +8,12 @@ public final class Email {
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
     private final String value;
 
-    private Email(String value) {
-        this.value = value;
+    // Public constructor for backward compatibility with tests
+    public Email(String value) {
+        this.value = validate(value);
     }
 
-    public static Email of(String value) {
+    private static String validate(String value) {
         if (value == null) throw new InvalidEmailException("Email cannot be null");
         String trimmed = value.trim();
         if (trimmed.isEmpty()) throw new InvalidEmailException("Email cannot be blank");
@@ -20,7 +21,11 @@ public final class Email {
         if (!EMAIL_PATTERN.matcher(trimmed).matches()) {
             throw new InvalidEmailException("Invalid email format");
         }
-        return new Email(trimmed);
+        return trimmed;
+    }
+
+    public static Email of(String value) {
+        return new Email(validate(value));
     }
 
     public String getValue() { return value; }

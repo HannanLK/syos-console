@@ -10,9 +10,12 @@ import java.util.Objects;
  * Immutable with business rules embedded.
  */
 public final class SynexPoints implements Comparable<SynexPoints> {
-    private static final BigDecimal ZERO = BigDecimal.ZERO.setScale(2);
+    private static final BigDecimal ZERO_VALUE = BigDecimal.ZERO.setScale(2);
     private static final BigDecimal POINTS_RATE = new BigDecimal("0.01"); // 1% of purchase
     private final BigDecimal value; // scale(2)
+    
+    // Public constant for backward compatibility with tests
+    public static final SynexPoints ZERO = zero();
 
     private SynexPoints(BigDecimal value) {
         this.value = value.setScale(2);
@@ -25,7 +28,7 @@ public final class SynexPoints implements Comparable<SynexPoints> {
     }
 
     public static SynexPoints zero() {
-        return new SynexPoints(ZERO);
+        return new SynexPoints(ZERO_VALUE);
     }
 
     /**

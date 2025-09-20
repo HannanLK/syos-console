@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Target: 100% line coverage for ItemMasterFile
  */
 @DisplayName("ItemMasterFile Entity Tests")
-class ItemMasterFileComprehensiveTest {
+class ItemMasterFileEnhancedTest {
     
     private ItemMasterFile itemMasterFile;
     private ItemCode validItemCode;
@@ -34,14 +34,14 @@ class ItemMasterFileComprehensiveTest {
     
     @BeforeEach
     void setUp() {
-        validItemCode = new ItemCode("IT001");
-        validName = new Name("Test Product");
-        validBrandId = new BrandId(1L);
-        validCategoryId = new CategoryId(1L);
-        validCostPrice = new Money(BigDecimal.valueOf(10.00));
-        validSellingPrice = new Money(BigDecimal.valueOf(15.00));
-        validReorderPoint = new ReorderPoint(50);
-        validSupplierId = new SupplierId(1L);
+        validItemCode = ItemCode.of("IT001");
+        validName = Name.of("Test Product");
+        validBrandId = BrandId.of(1L);
+        validCategoryId = CategoryId.of(1L);
+        validCostPrice = Money.of(BigDecimal.valueOf(10.00));
+        validSellingPrice = Money.of(BigDecimal.valueOf(15.00));
+        validReorderPoint = ReorderPoint.of(50);
+        validSupplierId = SupplierId.of(1L);
         
         itemMasterFile = new ItemMasterFile(
             validItemCode,
@@ -50,7 +50,7 @@ class ItemMasterFileComprehensiveTest {
             validCategoryId,
             "Test Description",
             UnitOfMeasure.EACH,
-            new PackSize(1),
+            new PackSize(BigDecimal.valueOf(1)),
             validCostPrice,
             validSellingPrice,
             validReorderPoint,

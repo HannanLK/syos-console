@@ -153,6 +153,21 @@ public class SynexPointsConfiguration {
             .setScale(2, RoundingMode.HALF_UP) + "%";
     }
     
+    /**
+     * Getter methods required by SystemConfiguration
+     */
+    public BigDecimal getMinimumSpendingThreshold() {
+        return minimumSpendingThreshold;
+    }
+    
+    public BigDecimal getMaximumPointsPerTransaction() {
+        return maximumPointsPerTransaction;
+    }
+    
+    public boolean isActive() {
+        return isActive;
+    }
+    
     private void validateConfiguration(BigDecimal pointsRate, 
                                      BigDecimal minThreshold, 
                                      BigDecimal maxPoints) {

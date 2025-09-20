@@ -78,7 +78,7 @@ public class ItemMasterFileEntity {
     @Column(name = "updated_by")
     private Long updatedBy;
 
-    protected ItemMasterFileEntity() {
+    public ItemMasterFileEntity() {
         // JPA only
     }
 

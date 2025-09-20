@@ -58,6 +58,15 @@ public final class UserResponse {
     }
 
     /**
+     * Factory method for simple successful response
+     */
+    public static UserResponse success(Long userId, String username, String name, 
+                                     String email, UserRole role, String message) {
+        return new UserResponse(true, message, userId, username, name, email, role, 
+                               null, true, LocalDateTime.now());
+    }
+
+    /**
      * Factory method for failure response
      */
     public static UserResponse failure(String message) {
@@ -75,6 +84,9 @@ public final class UserResponse {
     public String getSynexPoints() { return synexPoints; }
     public boolean isActive() { return active; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    
+    // Additional getter for testing compatibility
+    public String getErrorMessage() { return success ? null : message; }
 
     @Override
     public String toString() {

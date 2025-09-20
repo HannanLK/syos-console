@@ -1,7 +1,5 @@
 package com.syos.adapter.in.cli.menu;
 
-import lombok.Getter;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,10 +7,8 @@ import java.util.List;
  * Represents a menu with title and items
  */
 public class Menu {
-    @Getter
     private final String title;
     private final List<MenuItem> items;
-    @Getter
     private final String prompt;
 
     // Explicit getters to avoid Lombok processing issues during compilation

@@ -9,7 +9,8 @@ import java.util.Objects;
 public class BrandId {
     private final Long value;
 
-    private BrandId(Long value) {
+    // Public constructor for backward compatibility with tests
+    public BrandId(Long value) {
         if (value == null || value <= 0) {
             throw new IllegalArgumentException("Brand ID must be positive");
         }

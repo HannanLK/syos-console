@@ -9,12 +9,17 @@ import java.util.Objects;
  */
 public class PackSize {
     private final BigDecimal value;
-
-    private PackSize(BigDecimal value) {
+    
+    // Public constructors for backward compatibility with tests
+    public PackSize(BigDecimal value) {
         if (value == null || value.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Pack size must be positive");
         }
         this.value = value;
+    }
+    
+    public PackSize(int value) {
+        this(BigDecimal.valueOf(value));
     }
 
     public static PackSize of(BigDecimal value) {

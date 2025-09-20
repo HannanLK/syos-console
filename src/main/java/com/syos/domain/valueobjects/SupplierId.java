@@ -9,7 +9,8 @@ import java.util.Objects;
 public class SupplierId {
     private final Long value;
 
-    private SupplierId(Long value) {
+    // Public constructor for backward compatibility with tests
+    public SupplierId(Long value) {
         if (value == null || value <= 0) {
             throw new IllegalArgumentException("Supplier ID must be positive");
         }

@@ -8,6 +8,13 @@ public interface ConsoleIO {
     void print(String message);
     void println(String message);
     void println();
+    
+    /**
+     * Alias for println - prints a line with message
+     */
+    default void printLine(String message) {
+        println(message);
+    }
 
     /**
      * Read a line from input without printing any prompt.
