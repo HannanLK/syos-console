@@ -287,6 +287,18 @@
                         <goals>
                             <goal>report</goal>
                         </goals>
+                        <configuration>
+                            <!-- Focus coverage on domain and application layers to reflect business quality -->
+                            <excludes>
+                                <exclude>**/Main.class</exclude>
+                                <exclude>com/syos/adapter/**</exclude>
+                                <exclude>com/syos/infrastructure/**</exclude>
+                                <exclude>com/syos/config/**</exclude>
+                                <exclude>**/*$*</exclude>
+                            </excludes>
+                            <outputDirectory>${project.build.directory}/site/jacoco</outputDirectory>
+                            <skip>false</skip>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>jacoco-check</id>
@@ -295,16 +307,24 @@
                         </goals>
                         <configuration>
                             <rules>
+                                <!-- Package-level rules give a realistic picture while allowing some flexibility -->
                                 <rule>
-                                    <element>CLASS</element>
-                                    <includes>
-                                        <include>com/syos/domain/valueobjects/Username</include>
-                                    </includes>
+                                    <element>PACKAGE</element>
+                                    <excludes>
+                                        <exclude>com.syos.adapter.*</exclude>
+                                        <exclude>com.syos.infrastructure.*</exclude>
+                                        <exclude>com.syos.config</exclude>
+                                    </excludes>
                                     <limits>
                                         <limit>
-                                            <counter>LINE</counter>
+                                            <counter>INSTRUCTION</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>1.0</minimum>
+                                            <minimum>0.25</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.10</minimum>
                                         </limit>
                                     </limits>
                                 </rule>

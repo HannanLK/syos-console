@@ -459,19 +459,6 @@ src/main/java/com/syos/infrastructure/
 │   │   └── FlywayConfig.java
 │   │
 │   └── migrations/
-│       ├── V001__Create_Extensions_And_Types.sql
-│       ├── V002__Create_Core_Tables.sql
-│       ├── V003__Create_Item_Master_And_Locations.sql
-│       ├── V004__Create_Promotions_And_Transactions.sql
-│       ├── V005__Create_Returns_And_Movements.sql
-│       ├── V006__Create_System_Tables.sql
-│       ├── V007__Create_Indexes.sql
-│       ├── V008__Create_Functions_And_Triggers.sql
-│       ├── V009__Create_Views.sql
-│       ├── V010__Seed_Data.sql
-│       ├── V011__Drop_Legacy_Stock_Tables.sql
-│       ├── V012__Create_Warehouse_Stock_Management.sql
-│       └── V013__Create_Stock_Transfer_Views.sql
 │
 ├── security/
 │   ├── BCryptPasswordEncoder.java
@@ -529,7 +516,6 @@ src/main/java/com/syos/shared/
 │   ├── NotificationType.java
 │   ├── TransferType.java
 │   ├── TransferStatus.java
-│   └── QualityStatus.java
 │
 ├── utils/
 │   ├── DateUtils.java

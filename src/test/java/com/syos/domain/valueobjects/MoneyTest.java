@@ -1,45 +1,71 @@
 package com.syos.domain.valueobjects;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
 
+@DisplayName("Money Value Object")
 class MoneyTest {
 
     @Test
-    void arithmeticOperations_andComparisons() {
-        Money a = Money.of(new BigDecimal("100.00"));
-        Money b = Money.of(new BigDecimal("25.50"));
+    @DisplayName("should create money with scale normalization and non-negative validation")
+    void creationAndNormalization() {
+        Money m = Money.of(new BigDecimal("100.1234"));
+        assertThat(m.getAmount().scale()).isLessThanOrEqualTo(2);
 
-        assertEquals(Money.of(new BigDecimal("125.50")), a.plus(b));
-        assertEquals(Money.of(new BigDecimal("74.50")), a.minus(b));
-        assertTrue(a.isGreaterThan(b));
-        assertTrue(a.isGreaterThanOrEqual(b));
-        assertTrue(Money.zero().isZero());
+        assertThatThrownBy(() -> Money.of((BigDecimal) null))
+            .isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> Money.of(new BigDecimal("-1.00")))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("negative");
     }
 
     @Test
-    void times_worksForDifferentOverloads() {
-        Money a = Money.of(10.0);
-        assertEquals(Money.of(30.0), a.times(3));
-        assertEquals(Money.of(25.0), a.times(2.5));
-        assertEquals(Money.of(new BigDecimal("15.00")), a.times(new BigDecimal("1.5")));
+    @DisplayName("arithmetic operations: plus, minus, times and multiply alias")
+    void arithmeticOperations() {
+        Money a = Money.of(new BigDecimal("150.00"));
+        Money b = Money.of(new BigDecimal("50.00"));
+
+        assertThat(a.plus(b).getAmount()).isEqualByComparingTo("200.00");
+        assertThat(a.minus(b).getAmount()).isEqualByComparingTo("100.00");
+        assertThat(a.times(2).getAmount()).isEqualByComparingTo("300.00");
+        assertThat(a.times(new BigDecimal("1.10")).getAmount()).isEqualByComparingTo("165.0000");
+        assertThat(a.multiply(new BigDecimal("2"))).isEqualTo(a.times(new BigDecimal("2")));
+
+        Money c = Money.of(new BigDecimal("0")).plus(Money.of(new BigDecimal("0")));
+        assertThat(c.isZero()).isTrue();
+
+        assertThatThrownBy(() -> b.minus(a))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("cannot be negative");
     }
 
     @Test
-    void negativeMoneyNotAllowed_andMinusNotBelowZero() {
-        assertThrows(IllegalArgumentException.class, () -> Money.of(new BigDecimal("-1")));
-        Money a = Money.of(5.0);
-        assertThrows(IllegalArgumentException.class, () -> a.minus(Money.of(10.0)));
+    @DisplayName("comparisons and helpers")
+    void comparisons() {
+        Money low = Money.of(new BigDecimal("10.00"));
+        Money high = Money.of(new BigDecimal("20.00"));
+
+        assertThat(low.isLessThan(high)).isTrue();
+        assertThat(high.isGreaterThan(low)).isTrue();
+        assertThat(high.isGreaterThanOrEqual(low)).isTrue();
+        assertThat(low.compareTo(high)).isLessThan(0);
+        assertThat(low.equals(Money.of(new BigDecimal("10.0")))).isTrue();
+        assertThat(low.hashCode()).isEqualTo(Money.of(new BigDecimal("10.00")).hashCode());
+        assertThat(low.toString()).contains("LKR");
+        assertThat(Money.of(new BigDecimal("150.00")).toDisplayString()).isEqualTo("150");
     }
 
     @Test
-    void profitMarginPercent_calculatesProperly() {
+    @DisplayName("profit margin percent calculation")
+    void profitMargin() {
+        Money sell = Money.of(new BigDecimal("150.00"));
         Money cost = Money.of(new BigDecimal("100.00"));
-        Money selling = Money.of(new BigDecimal("130.00"));
-        BigDecimal margin = selling.profitMarginPercent(cost);
-        assertEquals(new BigDecimal("30.0000"), margin);
+        assertThat(sell.profitMarginPercent(cost)).isEqualByComparingTo("50.0000");
+        assertThatThrownBy(() -> sell.profitMarginPercent(Money.zero()))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 }

@@ -29,6 +29,16 @@ public interface ConsoleIO {
     String readPassword();
 
     /**
+     * Backward-compatible overload used by some tests/controllers to show a prompt before password input.
+     */
+    default String readPassword(String prompt) {
+        if (prompt != null && !prompt.isEmpty()) {
+            print(prompt);
+        }
+        return readPassword();
+    }
+
+    /**
      * Printf-style formatted output to console.
      */
     void printf(String format, Object... args);

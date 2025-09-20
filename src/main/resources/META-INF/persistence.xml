@@ -16,6 +16,9 @@
         <class>com.syos.infrastructure.persistence.entities.WarehouseStockEntity</class>
         <class>com.syos.infrastructure.persistence.entities.ShelfStockEntity</class>
         <class>com.syos.infrastructure.persistence.entities.WebInventoryEntity</class>
+        <class>com.syos.infrastructure.persistence.entities.TransactionEntity</class>
+        <class>com.syos.infrastructure.persistence.entities.TransactionItemEntity</class>
+        <class>com.syos.infrastructure.persistence.entities.BillEntity</class>
         
         <properties>
             <!-- Database Connection Properties -->

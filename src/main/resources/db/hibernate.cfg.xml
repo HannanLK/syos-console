@@ -70,7 +70,24 @@
         <property name="hibernate.bytecode.use_reflection_optimizer">true</property>
 
         <!-- Entity Mappings ======================================= -->
+        <!-- Core System Entities -->
         <mapping class="com.syos.infrastructure.persistence.UserEntity"/>
+        
+        <!-- Product and Inventory Entities -->
         <mapping class="com.syos.infrastructure.persistence.entities.ItemMasterFileEntity"/>
+        <mapping class="com.syos.infrastructure.persistence.entities.BrandEntity"/>
+        <mapping class="com.syos.infrastructure.persistence.entities.CategoryEntity"/>
+        <mapping class="com.syos.infrastructure.persistence.entities.SupplierEntity"/>
+        
+        <!-- Stock Management Entities -->
+        <mapping class="com.syos.infrastructure.persistence.entities.BatchEntity"/>
+        <mapping class="com.syos.infrastructure.persistence.entities.WarehouseStockEntity"/>
+        <mapping class="com.syos.infrastructure.persistence.entities.ShelfStockEntity"/>
+        <mapping class="com.syos.infrastructure.persistence.entities.WebInventoryEntity"/>
+        
+        <!-- Transaction and Billing Entities -->
+        <mapping class="com.syos.infrastructure.persistence.entities.TransactionEntity"/>
+        <mapping class="com.syos.infrastructure.persistence.entities.TransactionItemEntity"/>
+        <mapping class="com.syos.infrastructure.persistence.entities.BillEntity"/>
     </session-factory>
 </hibernate-configuration>

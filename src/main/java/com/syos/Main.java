@@ -44,6 +44,15 @@ public class Main {
         } else {
             System.setProperty("CONSOLE_LOGGING", "false");
         }
+        
+        // Suppress all Hibernate debug logging in production
+        if (!"development".equals(environment)) {
+            System.setProperty("hibernate.show_sql", "false");
+            System.setProperty("hibernate.format_sql", "false");
+            System.setProperty("hibernate.use_sql_comments", "false");
+            System.setProperty("org.hibernate.SQL", "WARN");
+            System.setProperty("org.hibernate.orm.connections.pooling", "WARN");
+        }
     }
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     private static final boolean USE_DATABASE = true; // Set to false for in-memory mode
@@ -64,12 +73,23 @@ public class Main {
         System.setProperty("logging.config", "classpath:logging/logback.xml");
         System.setProperty("LOG_HOME", "D:/4th_final/sem1/clean_cod/syos/syos-console/logs");
         
-        // Set environment-based console logging
+        // Determine environment from system property or default to production
         String environment = System.getProperty("APP_ENV", "production");
+        
+        // Set environment-based console logging
         if ("development".equals(environment)) {
             System.setProperty("CONSOLE_LOGGING", "true");
         } else {
             System.setProperty("CONSOLE_LOGGING", "false");
+        }
+        
+        // Suppress all Hibernate debug logging in production
+        if (!"development".equals(environment)) {
+            System.setProperty("hibernate.show_sql", "false");
+            System.setProperty("hibernate.format_sql", "false");
+            System.setProperty("hibernate.use_sql_comments", "false");
+            System.setProperty("org.hibernate.SQL", "WARN");
+            System.setProperty("org.hibernate.orm.connections.pooling", "WARN");
         }
 
         logger.info("Starting SYOS Console Application with Enhanced Product Management - Environment: {}", environment);
@@ -87,7 +107,17 @@ public class Main {
         
         try {
             // Initialize infrastructure
-            ConsoleIO console = new StandardConsoleIO();
+            ConsoleIO baseConsoleIO = new StandardConsoleIO();
+            
+            // Wrap with logging decorator in development mode
+            ConsoleIO console = "development".equals(environment) 
+                ? new com.syos.adapter.in.cli.io.LoggingConsoleIODecorator(baseConsoleIO, false, true)
+                : baseConsoleIO;
+                
+            // Initialize Event Bus for domain events
+            com.syos.application.services.EventBus eventBus = 
+                com.syos.application.services.EventBus.getInstance();
+            logger.info("Event Bus initialized for domain event publishing");
             
             if (USE_DATABASE) {
                 logger.info("Initializing PostgreSQL database connection...");
@@ -179,7 +209,10 @@ public class Main {
                 supplierRepository,
                 sessionManager,
                 itemRepository,
-                webInventoryRepository
+                webInventoryRepository,
+                warehouseStockRepository,
+                shelfStockRepository,
+                productManagementUseCase
             );
             
             // Display welcome banner

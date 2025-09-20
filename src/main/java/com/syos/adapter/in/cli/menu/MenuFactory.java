@@ -9,9 +9,12 @@ import com.syos.application.ports.out.CategoryRepository;
 import com.syos.application.ports.out.SupplierRepository;
 import com.syos.application.ports.out.ItemMasterFileRepository;
 import com.syos.application.ports.out.WebInventoryRepository;
+import com.syos.application.ports.out.WarehouseStockRepository;
+import com.syos.application.ports.out.ShelfStockRepository;
 import com.syos.application.usecases.auth.LoginUseCase;
 import com.syos.application.usecases.auth.RegisterCustomerUseCase;
 import com.syos.application.usecases.inventory.AddProductUseCase;
+import com.syos.application.usecases.inventory.CompleteProductManagementUseCase;
 import com.syos.shared.enums.UserRole;
 
 /**
@@ -32,6 +35,9 @@ public class MenuFactory {
     private final SessionManager sessionManager;
     private final ItemMasterFileRepository itemRepository;
     private final WebInventoryRepository webInventoryRepository;
+    private final WarehouseStockRepository warehouseStockRepository;
+    private final ShelfStockRepository shelfStockRepository;
+    private final CompleteProductManagementUseCase productManagementUseCase;
 
     public MenuFactory(ConsoleIO console, MenuNavigator navigator,
                      LoginUseCase loginUseCase, RegisterCustomerUseCase registerUseCase,
@@ -49,6 +55,9 @@ public class MenuFactory {
         this.sessionManager = null;
         this.itemRepository = null;
         this.webInventoryRepository = null;
+        this.warehouseStockRepository = null;
+        this.shelfStockRepository = null;
+        this.productManagementUseCase = null;
     }
 
     // Overloaded constructor to enable Add Product command and other features
@@ -61,7 +70,10 @@ public class MenuFactory {
                        SupplierRepository supplierRepository,
                        SessionManager sessionManager,
                        ItemMasterFileRepository itemRepository,
-                       WebInventoryRepository webInventoryRepository) {
+                       WebInventoryRepository webInventoryRepository,
+                       WarehouseStockRepository warehouseStockRepository,
+                       ShelfStockRepository shelfStockRepository,
+                       CompleteProductManagementUseCase productManagementUseCase) {
         this.console = console;
         this.navigator = navigator;
         this.loginUseCase = loginUseCase;
@@ -74,6 +86,9 @@ public class MenuFactory {
         this.sessionManager = sessionManager;
         this.itemRepository = itemRepository;
         this.webInventoryRepository = webInventoryRepository;
+        this.warehouseStockRepository = warehouseStockRepository;
+        this.shelfStockRepository = shelfStockRepository;
+        this.productManagementUseCase = productManagementUseCase;
     }
 
     /**
@@ -140,17 +155,27 @@ public class MenuFactory {
                 (addProductUseCase != null && brandRepository != null && categoryRepository != null && supplierRepository != null && sessionManager != null)
                     ? new AddProductCommand(console, addProductUseCase, brandRepository, categoryRepository, supplierRepository, sessionManager)
                     : createPlaceholderCommand("Add Product")))
-            .addItem(new MenuItem("3", "View Shelf Stock", 
-                createPlaceholderCommand("Shelf Stock")))
-            .addItem(new MenuItem("4", "View Discounts", 
-                createPlaceholderCommand("Discounts")))
-            .addItem(new MenuItem("5", "Reports & Insights", 
-                createPlaceholderCommand("Reports & Insights")))
-            .addItem(new MenuItem("6", "Add Customer", 
-                createPlaceholderCommand("Add Customer")))
-            .addItem(new MenuItem("7", "View Products Stock", 
-                createPlaceholderCommand("Products Stock")))
-            .addItem(new MenuItem("L", "Logout", 
+            .addItem(new MenuItem("3", "View Warehouse Stock",
+                (warehouseStockRepository != null)
+                    ? new ViewWarehouseInventoryCommand(console, warehouseStockRepository)
+                    : createPlaceholderCommand("Warehouse Stock")))
+            .addItem(new MenuItem("4", "View Shelf Stock",
+                (shelfStockRepository != null)
+                    ? new ViewShelfInventoryCommand(console, shelfStockRepository)
+                    : createPlaceholderCommand("Shelf Stock")))
+            .addItem(new MenuItem("5", "View Web Inventory",
+                (webInventoryRepository != null)
+                    ? new ViewWebInventoryCommand(console, webInventoryRepository)
+                    : createPlaceholderCommand("Web Inventory")))
+            .addItem(new MenuItem("6", "Transfer to Shelf",
+                (productManagementUseCase != null && sessionManager != null)
+                    ? new TransferToShelfCommand(console, sessionManager, productManagementUseCase)
+                    : createPlaceholderCommand("Transfer to Shelf")))
+            .addItem(new MenuItem("7", "Transfer to Web",
+                (productManagementUseCase != null && sessionManager != null)
+                    ? new TransferToWebCommand(console, sessionManager, productManagementUseCase)
+                    : createPlaceholderCommand("Transfer to Web")))
+            .addItem(new MenuItem("L", "Logout",
                 new LogoutCommand(console, navigator, this)))
             .prompt("Enter your choice: ")
             .build();
@@ -168,18 +193,26 @@ public class MenuFactory {
                 (addProductUseCase != null && brandRepository != null && categoryRepository != null && supplierRepository != null && sessionManager != null)
                     ? new AddProductCommand(console, addProductUseCase, brandRepository, categoryRepository, supplierRepository, sessionManager)
                     : createPlaceholderCommand("Add Product")))
-            .addItem(new MenuItem("3", "Inventory Management", 
-                createPlaceholderCommand("Inventory Management")))
-            .addItem(new MenuItem("4", "User Management", 
-                createPlaceholderCommand("User Management")))
-            .addItem(new MenuItem("5", "Reports & Analytics", 
-                createPlaceholderCommand("Reports & Analytics")))
-            .addItem(new MenuItem("6", "System Settings", 
-                createPlaceholderCommand("System Settings")))
-            .addItem(new MenuItem("7", "Add/Manage Users", 
-                createPlaceholderCommand("Add/Manage Users")))
-            .addItem(new MenuItem("8", "View Sales/Insights", 
-                createPlaceholderCommand("Sales & Insights")))
+            .addItem(new MenuItem("3", "View Warehouse Stock",
+                (warehouseStockRepository != null)
+                    ? new ViewWarehouseInventoryCommand(console, warehouseStockRepository)
+                    : createPlaceholderCommand("Warehouse Stock")))
+            .addItem(new MenuItem("4", "View Shelf Stock",
+                (shelfStockRepository != null)
+                    ? new ViewShelfInventoryCommand(console, shelfStockRepository)
+                    : createPlaceholderCommand("Shelf Stock")))
+            .addItem(new MenuItem("5", "View Web Inventory",
+                (webInventoryRepository != null)
+                    ? new ViewWebInventoryCommand(console, webInventoryRepository)
+                    : createPlaceholderCommand("Web Inventory")))
+            .addItem(new MenuItem("6", "Transfer to Shelf",
+                (productManagementUseCase != null && sessionManager != null)
+                    ? new TransferToShelfCommand(console, sessionManager, productManagementUseCase)
+                    : createPlaceholderCommand("Transfer to Shelf")))
+            .addItem(new MenuItem("7", "Transfer to Web",
+                (productManagementUseCase != null && sessionManager != null)
+                    ? new TransferToWebCommand(console, sessionManager, productManagementUseCase)
+                    : createPlaceholderCommand("Transfer to Web")))
             .addItem(new MenuItem("L", "Logout", 
                 new LogoutCommand(console, navigator, this)))
             .prompt("Enter your choice: ")

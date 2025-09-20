@@ -238,7 +238,18 @@ public class CompleteProductManagementUseCase {
             WarehouseStock updatedWarehouseStock = stockToTransfer.transfer(transferQuantity, currentUser);
             warehouseStockRepository.save(updatedWarehouseStock);
             
-            // Add to web inventory (implementation would depend on WebInventory entity)
+            // Create web inventory entry and save
+            WebInventory webInventory = WebInventory.createNew(
+                stockToTransfer.getItemCode(),
+                stockToTransfer.getItemId(),
+                stockToTransfer.getBatchId(),
+                transferQuantity,
+                stockToTransfer.getExpiryDate(),
+                currentUser,
+                getItemSellingPrice(stockToTransfer.getItemId())
+            );
+            webInventoryRepository.save(webInventory);
+            
             logger.info("Successfully transferred {} units to web inventory", quantity);
             
             return ProductResponse.success(
