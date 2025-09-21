@@ -15,6 +15,7 @@ import com.syos.application.usecases.auth.LoginUseCase;
 import com.syos.application.usecases.auth.RegisterCustomerUseCase;
 import com.syos.application.usecases.inventory.AddProductUseCase;
 import com.syos.application.usecases.inventory.CompleteProductManagementUseCase;
+import com.syos.application.ports.out.BatchRepository;
 import com.syos.shared.enums.UserRole;
 
 /**
@@ -38,6 +39,10 @@ public class MenuFactory {
     private final WarehouseStockRepository warehouseStockRepository;
     private final ShelfStockRepository shelfStockRepository;
     private final CompleteProductManagementUseCase productManagementUseCase;
+    private final BatchRepository batchRepository;
+    // Reporting repositories (read-only projections)
+    private final com.syos.application.ports.out.TransactionReportRepository transactionReportRepository;
+    private final com.syos.application.ports.out.BillReportRepository billReportRepository;
 
     public MenuFactory(ConsoleIO console, MenuNavigator navigator,
                      LoginUseCase loginUseCase, RegisterCustomerUseCase registerUseCase,
@@ -58,6 +63,9 @@ public class MenuFactory {
         this.warehouseStockRepository = null;
         this.shelfStockRepository = null;
         this.productManagementUseCase = null;
+        this.batchRepository = null;
+        this.transactionReportRepository = null;
+        this.billReportRepository = null;
     }
 
     // Overloaded constructor to enable Add Product command and other features
@@ -73,7 +81,10 @@ public class MenuFactory {
                        WebInventoryRepository webInventoryRepository,
                        WarehouseStockRepository warehouseStockRepository,
                        ShelfStockRepository shelfStockRepository,
-                       CompleteProductManagementUseCase productManagementUseCase) {
+                       CompleteProductManagementUseCase productManagementUseCase,
+                       BatchRepository batchRepository,
+                       com.syos.application.ports.out.TransactionReportRepository transactionReportRepository,
+                       com.syos.application.ports.out.BillReportRepository billReportRepository) {
         this.console = console;
         this.navigator = navigator;
         this.loginUseCase = loginUseCase;
@@ -89,6 +100,9 @@ public class MenuFactory {
         this.warehouseStockRepository = warehouseStockRepository;
         this.shelfStockRepository = shelfStockRepository;
         this.productManagementUseCase = productManagementUseCase;
+        this.batchRepository = batchRepository;
+        this.transactionReportRepository = transactionReportRepository;
+        this.billReportRepository = billReportRepository;
     }
 
     /**
@@ -161,6 +175,10 @@ public class MenuFactory {
                 (productManagementUseCase != null && sessionManager != null && warehouseStockRepository != null && shelfStockRepository != null && webInventoryRepository != null && itemRepository != null)
                     ? new WarehouseStockManagementCommand(console, sessionManager, warehouseStockRepository, shelfStockRepository, webInventoryRepository, itemRepository, productManagementUseCase)
                     : createPlaceholderCommand("Warehouse Stock Management")))
+            .addItem(new MenuItem("4", "Reports & Insights",
+                (sessionManager != null && itemRepository != null && warehouseStockRepository != null && shelfStockRepository != null && webInventoryRepository != null)
+                    ? new ReportsAndInsightsCommand(console, sessionManager, itemRepository, warehouseStockRepository, shelfStockRepository, webInventoryRepository, batchRepository, transactionReportRepository, billReportRepository)
+                    : createPlaceholderCommand("Reports & Insights")))
             .addItem(new MenuItem("L", "Logout",
                 new LogoutCommand(console, navigator, this)))
             .prompt("Enter your choice: ")
@@ -193,6 +211,10 @@ public class MenuFactory {
                 (sessionManager != null && itemRepository != null)
                     ? new ItemMasterManagementCommand(console, sessionManager, itemRepository)
                     : createPlaceholderCommand("Item Catalog Management")))
+            .addItem(new MenuItem("6", "Reports & Insights",
+                (sessionManager != null && itemRepository != null && warehouseStockRepository != null && shelfStockRepository != null && webInventoryRepository != null)
+                    ? new ReportsAndInsightsCommand(console, sessionManager, itemRepository, warehouseStockRepository, shelfStockRepository, webInventoryRepository, batchRepository, transactionReportRepository, billReportRepository)
+                    : createPlaceholderCommand("Reports & Insights")))
             .addItem(new MenuItem("L", "Logout", 
                 new LogoutCommand(console, navigator, this)))
             .prompt("Enter your choice: ")

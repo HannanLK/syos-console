@@ -191,6 +191,10 @@ public class Main {
                 new com.syos.application.usecases.inventory.AddProductUseCase(
                     itemRepository, brandRepository, categoryRepository, supplierRepository);
 
+            // Reporting repositories (read-only)
+            com.syos.application.ports.out.TransactionReportRepository transactionReportRepository = new com.syos.infrastructure.persistence.repositories.JpaTransactionReportRepository(emf);
+            com.syos.application.ports.out.BillReportRepository billReportRepository = new com.syos.infrastructure.persistence.repositories.JpaBillReportRepository(emf);
+
             MenuFactory menuFactory = new MenuFactory(
                 console,
                 navigator,
@@ -206,7 +210,10 @@ public class Main {
                 webInventoryRepository,
                 warehouseStockRepository,
                 shelfStockRepository,
-                productManagementUseCase
+                productManagementUseCase,
+                batchRepository,
+                transactionReportRepository,
+                billReportRepository
             );
             
             // Display welcome banner
