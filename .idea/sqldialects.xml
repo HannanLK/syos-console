@@ -2,6 +2,8 @@
 <project version="4">
   <component name="SqlDialectMappings">
     <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/6ee6eb54-8317-4f69-a0a4-cd1721081bd0/console.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V10__Alter_Batches_Add_Received_By_And_Align_Expiry_Type.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V11__Sync_Batches_Cost_Columns.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V1_CreateExtensions_Types.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V2_Create_UsersTable_With_Indexing.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V3__Create_Core_Tables.sql" dialect="PostgreSQL" />
@@ -10,6 +12,9 @@
     <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V5__Create_Batch_And_Stock_Tables.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V6__Create_FIFO_Functions_And_Procedures.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V7__Create_Transactions_And_Reports.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V8__Alter_Batches_Add_Cost_Per_Unit.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V9__Update_Transaction_Entities_For_JPA.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/database-setup.sql" dialect="PostgreSQL" />
     <file url="PROJECT" dialect="PostgreSQL" />
   </component>
 </project>

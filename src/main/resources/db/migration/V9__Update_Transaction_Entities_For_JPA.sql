@@ -1,5 +1,5 @@
 -- =============================================================================
--- SYOS Database Schema - V8__Update_Transaction_Entities_For_JPA.sql
+-- SYOS Database Schema - V9__Update_Transaction_Entities_For_JPA.sql
 -- Updates transaction tables to match JPA entity definitions
 -- =============================================================================
 

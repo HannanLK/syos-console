@@ -265,6 +265,58 @@ public class CompleteProductManagementUseCase {
         }
     }
 
+    /**
+     * Receive additional stock into an existing batch (same batch ID)
+     * Allows adding more stock to the same batch instead of creating a new one.
+     */
+    public ProductResponse receiveStockToExistingBatch(String itemCode, Long batchId, double quantity,
+                                                       String warehouseLocation, UserID currentUser) {
+        logger.info("Receiving additional stock into existing batch. Item: {}, BatchId: {}, Qty: {}", itemCode, batchId, quantity);
+        try {
+            if (batchId == null || quantity <= 0) {
+                return ProductResponse.failure("Batch ID and positive quantity are required");
+            }
+            // Validate item
+            Optional<ItemMasterFile> itemOpt = itemRepository.findByItemCode(ItemCode.of(itemCode));
+            if (itemOpt.isEmpty()) {
+                return ProductResponse.failure("Product not found: " + itemCode);
+            }
+            ItemMasterFile item = itemOpt.get();
+
+            // Validate batch exists and belongs to item
+            Optional<Batch> batchOpt = batchRepository.findById(batchId);
+            if (batchOpt.isEmpty()) {
+                return ProductResponse.failure("Batch not found: " + batchId);
+            }
+            Batch batch = batchOpt.get();
+            if (!item.getId().equals(batch.getItemId())) {
+                return ProductResponse.failure("Batch does not belong to the specified item");
+            }
+
+            // Create a warehouse stock entry referencing the same batch
+            WarehouseStock ws = WarehouseStock.createNew(
+                    item.getItemCode(),
+                    item.getId(),
+                    batch.getId(),
+                    Quantity.of(java.math.BigDecimal.valueOf(quantity)),
+                    batch.getExpiryDate(),
+                    currentUser,
+                    (warehouseLocation == null || warehouseLocation.isBlank()) ? "MAIN-WAREHOUSE" : warehouseLocation
+            );
+            warehouseStockRepository.save(ws);
+
+            return ProductResponse.success(
+                    item.getId(),
+                    "Stock received into existing batch successfully",
+                    item.getItemCode().getValue(),
+                    item.getItemName()
+            );
+        } catch (Exception e) {
+            logger.error("Failed to receive stock into existing batch", e);
+            return ProductResponse.failure("Failed to receive stock into existing batch: " + e.getMessage());
+        }
+    }
+
     // Private helper methods
     
     private void validateDependencies(ProductRequest request) {

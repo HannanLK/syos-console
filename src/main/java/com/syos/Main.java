@@ -1,6 +1,5 @@
 package com.syos;
 
-import com.syos.adapter.in.cli.controllers.EnhancedProductController;
 import com.syos.adapter.in.cli.io.ConsoleIO;
 import com.syos.adapter.in.cli.io.StandardConsoleIO;
 import com.syos.adapter.in.cli.menu.MenuFactory;
@@ -180,16 +179,6 @@ public class Main {
                 webInventoryRepository
             );
             
-            // Initialize enhanced product controller
-            EnhancedProductController productController = new EnhancedProductController(
-                console,
-                sessionManager,
-                productManagementUseCase,
-                brandRepository,
-                categoryRepository,
-                supplierRepository
-            );
-            
             // Initialize menu system with product management
             MenuNavigator navigator = new MenuNavigator(console);
 
@@ -328,18 +317,4 @@ public class Main {
     /**
      * Enhanced Menu Factory that includes product management
      */
-    private static class EnhancedMenuFactory extends MenuFactory {
-        private final EnhancedProductController productController;
-
-        public EnhancedMenuFactory(ConsoleIO console, MenuNavigator navigator,
-                                 LoginUseCase loginUseCase, RegisterCustomerUseCase registerUseCase,
-                                 UserRepository userRepository, EnhancedProductController productController) {
-            super(console, navigator, loginUseCase, registerUseCase, userRepository);
-            this.productController = productController;
-        }
-
-        // Override menu creation to include product management options
-        // Implementation details would extend the base MenuFactory
-        // to add product management menu items for admin/employee roles
-    }
 }

@@ -71,25 +71,82 @@ public class AddProductCommand implements Command {
             // Set the user who's creating the product
             request.createdBy(session.getUserId());
 
-            // Execute the use case
-            AddProductUseCase.AddProductResponse response = addProductUseCase.execute(request);
+            // Build a single ProductRequest to add item AND receive initial stock atomically
+            var productReq = new com.syos.application.dto.requests.ProductRequest();
+            productReq.setItemCode(request.getItemCode());
+            productReq.setItemName(request.getItemName());
+            productReq.setDescription(request.getDescription());
+            productReq.setBrandId(request.getBrandId());
+            productReq.setCategoryId(request.getCategoryId());
+            productReq.setSupplierId(request.getSupplierId());
+            productReq.setUnitOfMeasure(request.getUnitOfMeasure().name());
+            productReq.setPackSize(request.getPackSize().doubleValue());
+            productReq.setCostPrice(request.getCostPrice().doubleValue());
+            productReq.setSellingPrice(request.getSellingPrice().doubleValue());
+            productReq.setReorderPoint(request.getReorderPoint());
+            productReq.setPerishable(request.isPerishable());
 
-            // Display result
-            if (response.isSuccess()) {
-                console.printSuccess("✅ Product added successfully!");
-                console.println("Product ID: " + response.getItemId());
-                console.println("Item Code: " + response.getItemCode());
-                console.println(response.getMessage());
+            // Collect initial stock in the same flow (streamlined, no duplicate cost prompt)
+            String batchNumber = console.readLine("Enter Batch Number (leave blank to auto-generate): ");
+            if (batchNumber == null || batchNumber.trim().isEmpty()) {
+                String codePart = request.getItemCode().trim().toUpperCase();
+                String ts = java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(java.time.LocalDateTime.now());
+                batchNumber = codePart + "-" + ts;
+                console.printInfo("Auto-generated batch number: " + batchNumber);
+            }
+            productReq.setBatchNumber(batchNumber.trim());
 
-                // Optional: Receive initial warehouse stock to make it visible in View Warehouse Stock
-                if (productUseCase != null && sessionManager != null) {
-                    String recv = console.readLine("Receive initial stock into warehouse now? (y/n): ");
-                    if (recv != null && recv.trim().toLowerCase().startsWith("y")) {
-                        receiveInitialWarehouseStock(response.getItemCode());
+            java.math.BigDecimal qty;
+            while (true) {
+                String qtyStr = console.readLine("Enter Initial Quantity (default 1): ");
+                try {
+                    if (qtyStr == null || qtyStr.trim().isEmpty()) {
+                        qty = java.math.BigDecimal.ONE;
+                        break;
                     }
+                    qty = new java.math.BigDecimal(qtyStr.trim());
+                    if (qty.compareTo(java.math.BigDecimal.ZERO) <= 0) { console.printError("Quantity must be positive"); continue; }
+                    break;
+                } catch (NumberFormatException ex) {
+                    console.printError("Invalid quantity");
                 }
+            }
+            productReq.setInitialQuantity(qty.doubleValue());
+
+            // Optional perishable dates
+            String perishableAns = console.readLine("Does this batch have expiry? (y/N): ");
+            java.time.LocalDate mfg = null;
+            java.time.LocalDateTime exp = null;
+            if (perishableAns != null && perishableAns.trim().toLowerCase().startsWith("y")) {
+                String mfgStr = console.readLine("Manufacture Date (yyyy-MM-dd, optional): ");
+                if (mfgStr != null && !mfgStr.trim().isEmpty()) {
+                    try { mfg = java.time.LocalDate.parse(mfgStr.trim()); } catch (java.time.format.DateTimeParseException e) { console.printError("Invalid manufacture date. Skipping."); }
+                }
+                String expStr = console.readLine("Expiry Date (yyyy-MM-dd, optional): ");
+                if (expStr != null && !expStr.trim().isEmpty()) {
+                    try { exp = java.time.LocalDate.parse(expStr.trim()).atStartOfDay(); } catch (java.time.format.DateTimeParseException e) { console.printError("Invalid expiry date. Skipping."); }
+                }
+            }
+            if (mfg != null) productReq.setManufactureDate(mfg);
+            if (exp != null) productReq.setExpiryDate(exp);
+
+            String location = console.readLine("Warehouse Location (default MAIN-WAREHOUSE): ");
+            if (location == null || location.trim().isEmpty()) location = "MAIN-WAREHOUSE";
+            productReq.setWarehouseLocation(location.trim());
+
+            // IMPORTANT: Use the product's cost price for this batch as well (no duplicate prompt)
+            productReq.setCostPrice(request.getCostPrice().doubleValue());
+
+            // Execute atomic add + initial stock
+            var productResp = productUseCase.addProductWithInitialStock(productReq, com.syos.domain.valueobjects.UserID.of(session.getUserId()));
+
+            if (productResp.isSuccess()) {
+                console.printSuccess("✅ Product added successfully with initial stock!");
+                console.println("Item Code: " + productResp.getItemCode());
+                console.println(productResp.getMessage());
+                console.println("Hint: View it under Warehouse Stock Management → View Warehouse Stock.");
             } else {
-                console.printError("❌ Failed to add product: " + response.getMessage());
+                console.printError("❌ Failed to add product: " + productResp.getError());
             }
 
         } catch (Exception e) {
@@ -109,16 +166,23 @@ public class AddProductCommand implements Command {
             }
             // Collect minimal stock details
             String batchNumber;
-            while (true) {
-                batchNumber = console.readLine("Enter Batch Number: ");
-                if (batchNumber != null && !batchNumber.trim().isEmpty()) break;
-                console.printError("Batch number is required");
+            // Allow auto-generation if left blank
+            batchNumber = console.readLine("Enter Batch Number (leave blank to auto-generate): ");
+            if (batchNumber == null || batchNumber.trim().isEmpty()) {
+                String codePart = itemCode != null && !itemCode.trim().isEmpty() ? itemCode.trim().toUpperCase() : "BATCH";
+                String ts = java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(java.time.LocalDateTime.now());
+                batchNumber = codePart + "-" + ts;
+                console.printInfo("Auto-generated batch number: " + batchNumber);
             }
 
             java.math.BigDecimal qty;
             while (true) {
-                String qtyStr = console.readLine("Enter Initial Quantity: ");
+                String qtyStr = console.readLine("Enter Initial Quantity (default 1): ");
                 try {
+                    if (qtyStr == null || qtyStr.trim().isEmpty()) {
+                        qty = java.math.BigDecimal.ONE;
+                        break;
+                    }
                     qty = new java.math.BigDecimal(qtyStr.trim());
                     if (qty.compareTo(java.math.BigDecimal.ZERO) <= 0) { console.printError("Quantity must be positive"); continue; }
                     break;
@@ -151,6 +215,27 @@ public class AddProductCommand implements Command {
             if (mfg != null) req.setManufactureDate(mfg);
             if (exp != null) req.setExpiryDate(exp);
             req.setWarehouseLocation(location.trim());
+
+            // Cost per unit for this batch (must be positive)
+            java.math.BigDecimal batchCost;
+            while (true) {
+                String cp = console.readLine("Cost per unit for this batch (LKR): ");
+                try {
+                    if (cp == null || cp.trim().isEmpty()) {
+                        console.printError("Cost per unit is required and must be positive.");
+                        continue;
+                    }
+                    batchCost = new java.math.BigDecimal(cp.trim());
+                    if (batchCost.compareTo(java.math.BigDecimal.ZERO) <= 0) {
+                        console.printError("Cost per unit must be positive.");
+                        continue;
+                    }
+                    break;
+                } catch (NumberFormatException ex) {
+                    console.printError("Invalid amount. Please enter a number like 350 or 115.75");
+                }
+            }
+            req.setCostPrice(batchCost.doubleValue());
 
             var resp = productUseCase.receiveStock(itemCode, req, com.syos.domain.valueobjects.UserID.of(sessionManager.getCurrentUserId()));
             if (resp.isSuccess()) {
