@@ -274,6 +274,16 @@ public class User {
     }
     
     /**
+     * Reactivate user account
+     */
+    public User reactivate() {
+        // Allow reactivation for any non-null user
+        this.active = true;
+        this.updatedAt = LocalDateTime.now();
+        return this;
+    }
+    
+    /**
      * Add Synex Points - for backward compatibility with tests
      */
     public void addSynexPoints(SynexPoints points) {

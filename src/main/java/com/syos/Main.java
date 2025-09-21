@@ -132,7 +132,8 @@ public class Main {
                     categoryRepository = new JpaCategoryRepository(em);
                     supplierRepository = new JpaSupplierRepository(em);
                     batchRepository = new JpaBatchRepository(emf);
-                    warehouseStockRepository = new JpaWarehouseStockRepository(emf);
+                    // Use in-memory warehouse repo to avoid DB schema mismatch for now
+                    warehouseStockRepository = new com.syos.adapter.out.persistence.memory.InMemoryWarehouseStockRepository();
                     shelfStockRepository = createInMemoryShelfStockRepository(); // Placeholder
                     webInventoryRepository = createInMemoryWebInventoryRepository(); // Placeholder
                     
@@ -321,14 +322,7 @@ public class Main {
         } else {
             logger.info("In-memory persistence - data will be lost on application restart");
         }
-        
-        logger.info("Application features:");
-        logger.info("  ✅ User Registration & Authentication");
-        logger.info("  ✅ Complete Product Management (Add → Warehouse → Shelf/Web)");
-        logger.info("  ✅ FIFO Stock Management with Expiry Priority");
-        logger.info("  ✅ Multi-location Inventory (Warehouse, Shelf, Web)");
-        logger.info("  ✅ Real-time Stock Transfers");
-        logger.info("  ✅ Clean Architecture with 11+ Design Patterns");
+
     }
 
     /**

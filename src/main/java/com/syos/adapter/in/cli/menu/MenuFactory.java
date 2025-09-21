@@ -134,9 +134,9 @@ public class MenuFactory {
             .addItem(new MenuItem("1", "Browse Products", 
                 new BrowseProductsCommand(console, itemRepository, webInventoryRepository)))
             .addItem(new MenuItem("2", "View Cart", 
-                createPlaceholderCommand("Shopping Cart")))
+                new ViewCartCommand(console, sessionManager, itemRepository, webInventoryRepository)))
             .addItem(new MenuItem("3", "Order History", 
-                createPlaceholderCommand("Order History")))
+                new OrderHistoryCommand(console, sessionManager)))
             .addItem(new MenuItem("4", "Logout", 
                 new LogoutCommand(console, navigator, this)))
             .prompt("Enter your choice: ")
@@ -150,31 +150,17 @@ public class MenuFactory {
         return new Menu.Builder()
             .title("EMPLOYEE DASHBOARD")
             .addItem(new MenuItem("1", "Point of Sale (POS)", 
-                createPlaceholderCommand("Point of Sale")))
+                (sessionManager != null && shelfStockRepository != null && itemRepository != null)
+                    ? new POSCommand(console, sessionManager, shelfStockRepository, itemRepository)
+                    : createPlaceholderCommand("Point of Sale")))
             .addItem(new MenuItem("2", "Add Product",
-                (addProductUseCase != null && brandRepository != null && categoryRepository != null && supplierRepository != null && sessionManager != null)
-                    ? new AddProductCommand(console, addProductUseCase, brandRepository, categoryRepository, supplierRepository, sessionManager)
+                (addProductUseCase != null && brandRepository != null && categoryRepository != null && supplierRepository != null && sessionManager != null && productManagementUseCase != null)
+                    ? new AddProductCommand(console, addProductUseCase, brandRepository, categoryRepository, supplierRepository, sessionManager, productManagementUseCase)
                     : createPlaceholderCommand("Add Product")))
-            .addItem(new MenuItem("3", "View Warehouse Stock",
-                (warehouseStockRepository != null)
-                    ? new ViewWarehouseInventoryCommand(console, warehouseStockRepository)
-                    : createPlaceholderCommand("Warehouse Stock")))
-            .addItem(new MenuItem("4", "View Shelf Stock",
-                (shelfStockRepository != null)
-                    ? new ViewShelfInventoryCommand(console, shelfStockRepository)
-                    : createPlaceholderCommand("Shelf Stock")))
-            .addItem(new MenuItem("5", "View Web Inventory",
-                (webInventoryRepository != null)
-                    ? new ViewWebInventoryCommand(console, webInventoryRepository)
-                    : createPlaceholderCommand("Web Inventory")))
-            .addItem(new MenuItem("6", "Transfer to Shelf",
-                (productManagementUseCase != null && sessionManager != null)
-                    ? new TransferToShelfCommand(console, sessionManager, productManagementUseCase)
-                    : createPlaceholderCommand("Transfer to Shelf")))
-            .addItem(new MenuItem("7", "Transfer to Web",
-                (productManagementUseCase != null && sessionManager != null)
-                    ? new TransferToWebCommand(console, sessionManager, productManagementUseCase)
-                    : createPlaceholderCommand("Transfer to Web")))
+            .addItem(new MenuItem("3", "Warehouse Stock Management",
+                (productManagementUseCase != null && sessionManager != null && warehouseStockRepository != null && shelfStockRepository != null && webInventoryRepository != null && itemRepository != null)
+                    ? new WarehouseStockManagementCommand(console, sessionManager, warehouseStockRepository, shelfStockRepository, webInventoryRepository, itemRepository, productManagementUseCase)
+                    : createPlaceholderCommand("Warehouse Stock Management")))
             .addItem(new MenuItem("L", "Logout",
                 new LogoutCommand(console, navigator, this)))
             .prompt("Enter your choice: ")
@@ -188,31 +174,17 @@ public class MenuFactory {
         return new Menu.Builder()
             .title("ADMINISTRATOR DASHBOARD")
             .addItem(new MenuItem("1", "Point of Sale (POS)", 
-                createPlaceholderCommand("Point of Sale")))
+                (sessionManager != null && shelfStockRepository != null && itemRepository != null)
+                    ? new POSCommand(console, sessionManager, shelfStockRepository, itemRepository)
+                    : createPlaceholderCommand("Point of Sale")))
             .addItem(new MenuItem("2", "Add Product",
-                (addProductUseCase != null && brandRepository != null && categoryRepository != null && supplierRepository != null && sessionManager != null)
-                    ? new AddProductCommand(console, addProductUseCase, brandRepository, categoryRepository, supplierRepository, sessionManager)
+                (addProductUseCase != null && brandRepository != null && categoryRepository != null && supplierRepository != null && sessionManager != null && productManagementUseCase != null)
+                    ? new AddProductCommand(console, addProductUseCase, brandRepository, categoryRepository, supplierRepository, sessionManager, productManagementUseCase)
                     : createPlaceholderCommand("Add Product")))
-            .addItem(new MenuItem("3", "View Warehouse Stock",
-                (warehouseStockRepository != null)
-                    ? new ViewWarehouseInventoryCommand(console, warehouseStockRepository)
-                    : createPlaceholderCommand("Warehouse Stock")))
-            .addItem(new MenuItem("4", "View Shelf Stock",
-                (shelfStockRepository != null)
-                    ? new ViewShelfInventoryCommand(console, shelfStockRepository)
-                    : createPlaceholderCommand("Shelf Stock")))
-            .addItem(new MenuItem("5", "View Web Inventory",
-                (webInventoryRepository != null)
-                    ? new ViewWebInventoryCommand(console, webInventoryRepository)
-                    : createPlaceholderCommand("Web Inventory")))
-            .addItem(new MenuItem("6", "Transfer to Shelf",
-                (productManagementUseCase != null && sessionManager != null)
-                    ? new TransferToShelfCommand(console, sessionManager, productManagementUseCase)
-                    : createPlaceholderCommand("Transfer to Shelf")))
-            .addItem(new MenuItem("7", "Transfer to Web",
-                (productManagementUseCase != null && sessionManager != null)
-                    ? new TransferToWebCommand(console, sessionManager, productManagementUseCase)
-                    : createPlaceholderCommand("Transfer to Web")))
+            .addItem(new MenuItem("3", "Warehouse Stock Management",
+                (productManagementUseCase != null && sessionManager != null && warehouseStockRepository != null && shelfStockRepository != null && webInventoryRepository != null && itemRepository != null)
+                    ? new WarehouseStockManagementCommand(console, sessionManager, warehouseStockRepository, shelfStockRepository, webInventoryRepository, itemRepository, productManagementUseCase)
+                    : createPlaceholderCommand("Warehouse Stock Management")))
             .addItem(new MenuItem("L", "Logout", 
                 new LogoutCommand(console, navigator, this)))
             .prompt("Enter your choice: ")

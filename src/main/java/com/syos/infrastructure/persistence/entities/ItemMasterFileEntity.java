@@ -3,6 +3,8 @@ package com.syos.infrastructure.persistence.entities;
 import com.syos.shared.enums.ProductStatus;
 import com.syos.shared.enums.UnitOfMeasure;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -37,8 +39,9 @@ public class ItemMasterFileEntity {
     @Column(name = "supplier_id", nullable = false)
     private Long supplierId;
 
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Enumerated(EnumType.STRING)
-    @Column(name = "unit_of_measure", nullable = false, length = 20)
+    @Column(name = "unit_of_measure", columnDefinition = "unit_of_measure", nullable = false)
     private UnitOfMeasure unitOfMeasure;
 
     @Column(name = "pack_size", precision = 10, scale = 3)
@@ -57,7 +60,7 @@ public class ItemMasterFileEntity {
     private Boolean isPerishable;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", length = 20)
+    @Column(name = "status", columnDefinition = "product_status", insertable = false, updatable = false)
     private ProductStatus status;
 
     @Column(name = "is_featured")
@@ -107,7 +110,8 @@ public class ItemMasterFileEntity {
         this.sellingPrice = sellingPrice;
         this.reorderPoint = reorderPoint;
         this.isPerishable = isPerishable;
-        this.status = ProductStatus.ACTIVE;
+        // Let database default set status to 'ACTIVE' to avoid enum binding issues
+        this.status = null;
         this.isFeatured = Boolean.FALSE;
         this.isLatest = Boolean.FALSE;
         this.dateAdded = LocalDateTime.now();
