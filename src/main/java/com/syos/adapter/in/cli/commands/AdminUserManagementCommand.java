@@ -41,17 +41,21 @@ public class AdminUserManagementCommand implements Command {
             console.println("1. View All Users");
             console.println("2. Create Customer");
             console.println("3. Create Employee");
-            console.println("4. Deactivate User");
-            console.println("5. Activate User");
-            console.println("6. Back");
+            console.println("4. Edit User");
+            console.println("5. Delete User");
+            console.println("6. Deactivate User");
+            console.println("7. Activate User");
+            console.println("8. Back");
             String choice = console.readLine("Choose: ");
             switch (choice) {
                 case "1" -> listUsers();
                 case "2" -> createUser(UserRole.CUSTOMER);
                 case "3" -> createUser(UserRole.EMPLOYEE);
-                case "4" -> toggleActive(false);
-                case "5" -> toggleActive(true);
-                case "6" -> { return; }
+                case "4" -> editUser();
+                case "5" -> deleteUser();
+                case "6" -> toggleActive(false);
+                case "7" -> toggleActive(true);
+                case "8" -> { return; }
                 default -> console.printError("Invalid choice");
             }
         }
@@ -109,6 +113,57 @@ public class AdminUserManagementCommand implements Command {
                 }
                 userRepository.save(updated);
                 console.printSuccess("User status updated.");
+            }, () -> console.printError("User not found."));
+        } catch (NumberFormatException ex) {
+            console.printError("Invalid ID");
+        }
+    }
+
+    private void editUser() {
+        String idStr = console.readLine("User ID to edit: ");
+        try {
+            long id = Long.parseLong(idStr);
+            userRepository.findById(new UserID(id)).ifPresentOrElse(user -> {
+                String newName = console.readLine("New Name (blank to keep '" + user.getName().getValue() + "'): ");
+                String newEmail = console.readLine("New Email (blank to keep '" + user.getEmail().getValue() + "'): ");
+                String roleStr = console.readLine("New Role [CUSTOMER/EMPLOYEE/ADMIN] (blank to keep '" + user.getRole().name() + "'): ");
+                try {
+                    // Update name/email via domain method
+                    Name updatedName = (newName != null && !newName.isBlank()) ? Name.of(newName) : user.getName();
+                    Email updatedEmail = (newEmail != null && !newEmail.isBlank()) ? Email.of(newEmail) : user.getEmail();
+                    user.updateProfile(updatedName, updatedEmail);
+
+                    if (roleStr != null && !roleStr.isBlank()) {
+                        console.printWarning("Role changes are not supported via this screen (domain role is immutable). Skipping role update.");
+                    }
+
+                    userRepository.save(user);
+                    console.printSuccess("User updated successfully.");
+                } catch (Exception ex) {
+                    console.printError("Failed to update user: " + ex.getMessage());
+                }
+            }, () -> console.printError("User not found."));
+        } catch (NumberFormatException ex) {
+            console.printError("Invalid ID");
+        }
+    }
+
+    private void deleteUser() {
+        String idStr = console.readLine("User ID to delete: ");
+        try {
+            long id = Long.parseLong(idStr);
+            userRepository.findById(new UserID(id)).ifPresentOrElse(user -> {
+                String confirm = console.readLine("Are you sure you want to delete '" + user.getUsername().getValue() + "'? (y/N): ");
+                if ("y".equalsIgnoreCase(confirm)) {
+                    try {
+                        userRepository.deleteById(new UserID(id));
+                        console.printSuccess("User deleted.");
+                    } catch (Exception ex) {
+                        console.printError("Delete failed: " + ex.getMessage());
+                    }
+                } else {
+                    console.println("Cancelled.");
+                }
             }, () -> console.printError("User not found."));
         } catch (NumberFormatException ex) {
             console.printError("Invalid ID");

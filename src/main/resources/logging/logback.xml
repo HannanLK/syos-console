@@ -235,7 +235,7 @@
     <!-- Explicitly suppress Hibernate ORM subpackage noise in console -->
     <logger name="org.hibernate.orm" level="WARN"/>
     <logger name="org.hibernate.orm.connections.pooling" level="WARN"/>
-    <logger name="org.hibernate.SQL" level="WARN" additivity="false">
+    <logger name="org.hibernate.SQL" level="ERROR" additivity="false">
         <appender-ref ref="SQL_FILE"/>
     </logger>
     <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="WARN"/>

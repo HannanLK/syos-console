@@ -10,7 +10,8 @@ import com.syos.adapter.in.cli.io.StandardConsoleIO;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
+// import jakarta.persistence.Persistence;
+import com.syos.infrastructure.config.DatabaseConfig;
 
 /**
  * Configuration class for dependency injection without Spring.
@@ -61,30 +62,23 @@ public class ApplicationConfiguration {
 
     private void initializeJPA() {
         try {
-            // Create EntityManagerFactory using persistence.xml configuration
-            this.entityManagerFactory = Persistence.createEntityManagerFactory("syos-persistence-unit");
+            // Create EntityManagerFactory using centralized DatabaseConfig
+            this.entityManagerFactory = DatabaseConfig.getEntityManagerFactory();
             this.entityManager = entityManagerFactory.createEntityManager();
         } catch (Exception e) {
-            // Fallback for testing without database
-            System.err.println("Warning: Could not initialize JPA EntityManager: " + e.getMessage());
-            System.err.println("Running in test mode without database connection.");
-            this.entityManager = null;
+            // Fail fast to avoid silent in-memory fallbacks which cause data loss
+            throw new IllegalStateException("Failed to initialize JPA EntityManager. Database is required: " + e.getMessage(), e);
         }
     }
 
     private void initializeRepositories() {
-        if (entityManager != null) {
-            this.itemMasterFileRepository = new JpaItemMasterFileRepository(entityManager);
-            this.brandRepository = new JpaBrandRepository(entityManager);
-            this.categoryRepository = new JpaCategoryRepository(entityManager);
-            this.supplierRepository = new JpaSupplierRepository(entityManager);
-        } else {
-            // Create mock repositories for testing
-            this.itemMasterFileRepository = new MockItemMasterFileRepository();
-            this.brandRepository = new MockBrandRepository();
-            this.categoryRepository = new MockCategoryRepository();
-            this.supplierRepository = new MockSupplierRepository();
+        if (entityManager == null) {
+            throw new IllegalStateException("EntityManager not initialized. Cannot start without a database connection.");
         }
+        this.itemMasterFileRepository = new JpaItemMasterFileRepository(entityManager);
+        this.brandRepository = new JpaBrandRepository(entityManager);
+        this.categoryRepository = new JpaCategoryRepository(entityManager);
+        this.supplierRepository = new JpaSupplierRepository(entityManager);
     }
 
     private void initializeUseCases() {

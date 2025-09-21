@@ -185,6 +185,14 @@ public class MenuFactory {
                 (productManagementUseCase != null && sessionManager != null && warehouseStockRepository != null && shelfStockRepository != null && webInventoryRepository != null && itemRepository != null)
                     ? new WarehouseStockManagementCommand(console, sessionManager, warehouseStockRepository, shelfStockRepository, webInventoryRepository, itemRepository, productManagementUseCase)
                     : createPlaceholderCommand("Warehouse Stock Management")))
+            .addItem(new MenuItem("4", "User Management",
+                (sessionManager != null && userRepository != null)
+                    ? new AdminUserManagementCommand(console, sessionManager, userRepository)
+                    : createPlaceholderCommand("User Management")))
+            .addItem(new MenuItem("5", "Item Catalog Management",
+                (sessionManager != null && itemRepository != null)
+                    ? new ItemMasterManagementCommand(console, sessionManager, itemRepository)
+                    : createPlaceholderCommand("Item Catalog Management")))
             .addItem(new MenuItem("L", "Logout", 
                 new LogoutCommand(console, navigator, this)))
             .prompt("Enter your choice: ")

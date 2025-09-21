@@ -59,8 +59,9 @@ public class ItemMasterFileEntity {
     @Column(name = "is_perishable")
     private Boolean isPerishable;
 
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", columnDefinition = "product_status", insertable = false, updatable = false)
+    @Column(name = "status", columnDefinition = "product_status")
     private ProductStatus status;
 
     @Column(name = "is_featured")
@@ -110,8 +111,8 @@ public class ItemMasterFileEntity {
         this.sellingPrice = sellingPrice;
         this.reorderPoint = reorderPoint;
         this.isPerishable = isPerishable;
-        // Let database default set status to 'ACTIVE' to avoid enum binding issues
-        this.status = null;
+        // Default to ACTIVE status on creation; explicit set ensures repository queries see it
+        this.status = ProductStatus.ACTIVE;
         this.isFeatured = Boolean.FALSE;
         this.isLatest = Boolean.FALSE;
         this.dateAdded = LocalDateTime.now();

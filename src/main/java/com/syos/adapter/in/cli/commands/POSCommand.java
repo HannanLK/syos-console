@@ -125,17 +125,29 @@ public class POSCommand implements Command {
         Money grandTotal = cart.stream().map(CartLine::total).reduce(Money.zero(), Money::add);
         console.println(String.format("\nGrand Total: LKR %.2f", grandTotal.getAmount().doubleValue()));
 
-        // Cash tendered
-        double cash;
-        try {
-            cash = Double.parseDouble(console.readLine("Cash tendered (LKR): "));
-        } catch (NumberFormatException ex) {
-            console.printError("Invalid cash amount. POS cancelled.");
-            return;
-        }
-        if (cash < grandTotal.getAmount().doubleValue()) {
-            console.printError("Insufficient cash. POS cancelled.");
-            return;
+        // Cash tendered - loop until sufficient or cancel
+        double cash = -1;
+        while (true) {
+            String cashInput = console.readLine("Cash tendered (LKR) [enter 'C' to cancel]: ");
+            if (cashInput == null) {
+                console.printWarning("POS cancelled.");
+                return;
+            }
+            cashInput = cashInput.trim();
+            if (cashInput.equalsIgnoreCase("C")) {
+                console.printWarning("POS cancelled by user.");
+                return;
+            }
+            try {
+                cash = Double.parseDouble(cashInput);
+                if (cash < grandTotal.getAmount().doubleValue()) {
+                    console.printError(String.format("Insufficient cash. Need at least LKR %.2f. Try again or enter 'C' to cancel.", grandTotal.getAmount().doubleValue()));
+                    continue;
+                }
+                break;
+            } catch (NumberFormatException ex) {
+                console.printError("Invalid cash amount. Please enter a number or 'C' to cancel.");
+            }
         }
         double change = cash - grandTotal.getAmount().doubleValue();
 

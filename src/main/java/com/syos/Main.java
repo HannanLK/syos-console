@@ -144,10 +144,14 @@ public class Main {
                     logger.info("PostgreSQL repositories initialized successfully");
                     
                 } catch (Exception e) {
-                    logger.warn("Failed to connect to database, falling back to in-memory storage", e);
-                    console.printWarning("⚠️ WARNING: Database connection failed. Using in-memory storage for this session.");
-                    console.printWarning("⚠️ WARNING: Data will not persist after application restart.");
-                    initializeInMemoryRepositories();
+                    logger.error("Failed to connect to database. Application cannot proceed without a persistent store.", e);
+                    console.printError("ERROR: Could not connect to the PostgreSQL database. Please ensure the DB is running and configuration is correct (" + DatabaseConfig.getDatabaseUrl() + ").");
+                    console.printError("Application will now exit to prevent data loss. Fix the DB connection and restart.");
+                    // Terminate to avoid misleading 'success' on in-memory fallback
+                    if (emf != null && emf.isOpen()) {
+                        DatabaseConfig.closeEntityManagerFactory();
+                    }
+                    System.exit(2);
                 }
             } else {
                 logger.info("Using in-memory repository (development mode)");
