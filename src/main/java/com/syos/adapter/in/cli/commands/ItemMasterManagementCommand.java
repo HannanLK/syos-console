@@ -21,11 +21,14 @@ public class ItemMasterManagementCommand implements Command {
     private final ConsoleIO console;
     private final SessionManager sessionManager;
     private final ItemMasterFileRepository itemRepository;
+    private final com.syos.application.usecases.inventory.CompleteProductManagementUseCase productUseCase;
 
-    public ItemMasterManagementCommand(ConsoleIO console, SessionManager sessionManager, ItemMasterFileRepository itemRepository) {
+    public ItemMasterManagementCommand(ConsoleIO console, SessionManager sessionManager, ItemMasterFileRepository itemRepository,
+                                       com.syos.application.usecases.inventory.CompleteProductManagementUseCase productUseCase) {
         this.console = console;
         this.sessionManager = sessionManager;
         this.itemRepository = itemRepository;
+        this.productUseCase = productUseCase;
     }
 
     @Override
@@ -148,6 +151,11 @@ public class ItemMasterManagementCommand implements Command {
         } catch (Exception ex) {
             console.printError("Delete failed: " + ex.getMessage());
         }
+    }
+
+    private void receiveStock() {
+        // Delegate to the centralized receive stock command used in Warehouse menu
+        new ReceiveStockInWarehouseCommand(console, sessionManager, productUseCase).execute();
     }
 
     private Optional<Long> parseId(String s) {

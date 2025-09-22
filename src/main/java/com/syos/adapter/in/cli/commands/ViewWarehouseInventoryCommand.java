@@ -27,6 +27,7 @@ public class ViewWarehouseInventoryCommand implements Command {
 
         if (all == null || all.isEmpty()) {
             console.println("No warehouse stock available.");
+            console.println("Hint: Use 'Add Product' to add items with initial warehouse stock.");
         } else {
             for (WarehouseStock ws : all) {
                 console.println("Item " + ws.getItemCode().getValue() +

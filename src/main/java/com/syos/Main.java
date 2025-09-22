@@ -131,8 +131,8 @@ public class Main {
                     categoryRepository = new JpaCategoryRepository(em);
                     supplierRepository = new JpaSupplierRepository(em);
                     batchRepository = new JpaBatchRepository(emf);
-                    // Use in-memory warehouse repo to avoid DB schema mismatch for now
-                    warehouseStockRepository = new com.syos.adapter.out.persistence.memory.InMemoryWarehouseStockRepository();
+                    // Use JPA warehouse repository so initial stock persists and is visible in Warehouse view
+                    warehouseStockRepository = new com.syos.infrastructure.persistence.repositories.JpaWarehouseStockRepository(emf);
                     shelfStockRepository = createInMemoryShelfStockRepository(); // Placeholder
                     webInventoryRepository = createInMemoryWebInventoryRepository(); // Placeholder
                     
@@ -195,6 +195,11 @@ public class Main {
             com.syos.application.ports.out.TransactionReportRepository transactionReportRepository = new com.syos.infrastructure.persistence.repositories.JpaTransactionReportRepository(emf);
             com.syos.application.ports.out.BillReportRepository billReportRepository = new com.syos.infrastructure.persistence.repositories.JpaBillReportRepository(emf);
 
+            // Initialize promotions and discount service
+            com.syos.infrastructure.persistence.repositories.JpaPromotionRepository promoRepo = new com.syos.infrastructure.persistence.repositories.JpaPromotionRepository(emf);
+            com.syos.application.services.DiscountService discountService = new com.syos.application.services.DiscountService(promoRepo);
+            com.syos.infrastructure.persistence.repositories.JpaPOSRepository posRepository = new com.syos.infrastructure.persistence.repositories.JpaPOSRepository(emf);
+
             MenuFactory menuFactory = new MenuFactory(
                 console,
                 navigator,
@@ -213,7 +218,10 @@ public class Main {
                 productManagementUseCase,
                 batchRepository,
                 transactionReportRepository,
-                billReportRepository
+                billReportRepository,
+                discountService,
+                posRepository,
+                promoRepo
             );
             
             // Display welcome banner

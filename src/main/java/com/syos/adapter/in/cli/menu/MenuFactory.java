@@ -15,6 +15,7 @@ import com.syos.application.usecases.auth.LoginUseCase;
 import com.syos.application.usecases.auth.RegisterCustomerUseCase;
 import com.syos.application.usecases.inventory.AddProductUseCase;
 import com.syos.application.usecases.inventory.CompleteProductManagementUseCase;
+import com.syos.application.services.DiscountService;
 import com.syos.application.ports.out.BatchRepository;
 import com.syos.shared.enums.UserRole;
 
@@ -40,6 +41,9 @@ public class MenuFactory {
     private final ShelfStockRepository shelfStockRepository;
     private final CompleteProductManagementUseCase productManagementUseCase;
     private final BatchRepository batchRepository;
+    private final DiscountService discountService;
+    private final com.syos.infrastructure.persistence.repositories.JpaPOSRepository posRepository;
+    private final com.syos.infrastructure.persistence.repositories.JpaPromotionRepository promotionRepository;
     // Reporting repositories (read-only projections)
     private final com.syos.application.ports.out.TransactionReportRepository transactionReportRepository;
     private final com.syos.application.ports.out.BillReportRepository billReportRepository;
@@ -66,6 +70,9 @@ public class MenuFactory {
         this.batchRepository = null;
         this.transactionReportRepository = null;
         this.billReportRepository = null;
+        this.discountService = null;
+        this.posRepository = null;
+        this.promotionRepository = null;
     }
 
     // Overloaded constructor to enable Add Product command and other features
@@ -84,7 +91,10 @@ public class MenuFactory {
                        CompleteProductManagementUseCase productManagementUseCase,
                        BatchRepository batchRepository,
                        com.syos.application.ports.out.TransactionReportRepository transactionReportRepository,
-                       com.syos.application.ports.out.BillReportRepository billReportRepository) {
+                       com.syos.application.ports.out.BillReportRepository billReportRepository,
+                       DiscountService discountService,
+                       com.syos.infrastructure.persistence.repositories.JpaPOSRepository posRepository,
+                       com.syos.infrastructure.persistence.repositories.JpaPromotionRepository promotionRepository) {
         this.console = console;
         this.navigator = navigator;
         this.loginUseCase = loginUseCase;
@@ -103,6 +113,9 @@ public class MenuFactory {
         this.batchRepository = batchRepository;
         this.transactionReportRepository = transactionReportRepository;
         this.billReportRepository = billReportRepository;
+        this.discountService = discountService;
+        this.posRepository = posRepository;
+        this.promotionRepository = promotionRepository;
     }
 
     /**
@@ -165,7 +178,7 @@ public class MenuFactory {
             .title("EMPLOYEE DASHBOARD")
             .addItem(new MenuItem("1", "Point of Sale (POS)", 
                 (sessionManager != null && shelfStockRepository != null && itemRepository != null)
-                    ? new POSCommand(console, sessionManager, shelfStockRepository, itemRepository)
+                    ? new POSCommand(console, sessionManager, shelfStockRepository, itemRepository, discountService, posRepository)
                     : createPlaceholderCommand("Point of Sale")))
             .addItem(new MenuItem("2", "Add Product",
                 (addProductUseCase != null && brandRepository != null && categoryRepository != null && supplierRepository != null && sessionManager != null && productManagementUseCase != null)
@@ -175,7 +188,11 @@ public class MenuFactory {
                 (productManagementUseCase != null && sessionManager != null && warehouseStockRepository != null && shelfStockRepository != null && webInventoryRepository != null && itemRepository != null)
                     ? new WarehouseStockManagementCommand(console, sessionManager, warehouseStockRepository, shelfStockRepository, webInventoryRepository, itemRepository, productManagementUseCase)
                     : createPlaceholderCommand("Warehouse Stock Management")))
-            .addItem(new MenuItem("4", "Reports & Insights",
+            .addItem(new MenuItem("4", "Discounts & Promotions",
+                (sessionManager != null && promotionRepository != null)
+                    ? new ManagePromotionsCommand(console, sessionManager, promotionRepository)
+                    : createPlaceholderCommand("Discounts & Promotions")))
+            .addItem(new MenuItem("5", "Reports & Insights",
                 (sessionManager != null && itemRepository != null && warehouseStockRepository != null && shelfStockRepository != null && webInventoryRepository != null)
                     ? new ReportsAndInsightsCommand(console, sessionManager, itemRepository, warehouseStockRepository, shelfStockRepository, webInventoryRepository, batchRepository, transactionReportRepository, billReportRepository)
                     : createPlaceholderCommand("Reports & Insights")))
@@ -193,7 +210,7 @@ public class MenuFactory {
             .title("ADMINISTRATOR DASHBOARD")
             .addItem(new MenuItem("1", "Point of Sale (POS)", 
                 (sessionManager != null && shelfStockRepository != null && itemRepository != null)
-                    ? new POSCommand(console, sessionManager, shelfStockRepository, itemRepository)
+                    ? new POSCommand(console, sessionManager, shelfStockRepository, itemRepository, discountService, posRepository)
                     : createPlaceholderCommand("Point of Sale")))
             .addItem(new MenuItem("2", "Add Product",
                 (addProductUseCase != null && brandRepository != null && categoryRepository != null && supplierRepository != null && sessionManager != null && productManagementUseCase != null)
@@ -203,15 +220,19 @@ public class MenuFactory {
                 (productManagementUseCase != null && sessionManager != null && warehouseStockRepository != null && shelfStockRepository != null && webInventoryRepository != null && itemRepository != null)
                     ? new WarehouseStockManagementCommand(console, sessionManager, warehouseStockRepository, shelfStockRepository, webInventoryRepository, itemRepository, productManagementUseCase)
                     : createPlaceholderCommand("Warehouse Stock Management")))
-            .addItem(new MenuItem("4", "User Management",
+            .addItem(new MenuItem("4", "Discounts & Promotions",
+                (sessionManager != null && promotionRepository != null)
+                    ? new ManagePromotionsCommand(console, sessionManager, promotionRepository)
+                    : createPlaceholderCommand("Discounts & Promotions")))
+            .addItem(new MenuItem("5", "User Management",
                 (sessionManager != null && userRepository != null)
                     ? new AdminUserManagementCommand(console, sessionManager, userRepository)
                     : createPlaceholderCommand("User Management")))
-            .addItem(new MenuItem("5", "Item Catalog Management",
+            .addItem(new MenuItem("6", "Item Catalog Management",
                 (sessionManager != null && itemRepository != null)
-                    ? new ItemMasterManagementCommand(console, sessionManager, itemRepository)
+                    ? new ItemMasterManagementCommand(console, sessionManager, itemRepository, productManagementUseCase)
                     : createPlaceholderCommand("Item Catalog Management")))
-            .addItem(new MenuItem("6", "Reports & Insights",
+            .addItem(new MenuItem("7", "Reports & Insights",
                 (sessionManager != null && itemRepository != null && warehouseStockRepository != null && shelfStockRepository != null && webInventoryRepository != null)
                     ? new ReportsAndInsightsCommand(console, sessionManager, itemRepository, warehouseStockRepository, shelfStockRepository, webInventoryRepository, batchRepository, transactionReportRepository, billReportRepository)
                     : createPlaceholderCommand("Reports & Insights")))

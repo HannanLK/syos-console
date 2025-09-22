@@ -31,18 +31,23 @@ public class POSCommand implements Command {
     private final SessionManager sessionManager;
     private final ShelfStockRepository shelfRepo;
     private final ItemMasterFileRepository itemRepo;
+    private final com.syos.application.services.DiscountService discountService;
+    private final com.syos.infrastructure.persistence.repositories.JpaPOSRepository posRepository;
 
-    // very simple in-memory bill sequence for the current process
-    private static long BILL_SEQ = 1;
+    private boolean personalPurchaseMode = false;
 
     public POSCommand(ConsoleIO console,
                       SessionManager sessionManager,
                       ShelfStockRepository shelfRepo,
-                      ItemMasterFileRepository itemRepo) {
+                      ItemMasterFileRepository itemRepo,
+                      com.syos.application.services.DiscountService discountService,
+                      com.syos.infrastructure.persistence.repositories.JpaPOSRepository posRepository) {
         this.console = console;
         this.sessionManager = sessionManager;
         this.shelfRepo = shelfRepo;
         this.itemRepo = itemRepo;
+        this.discountService = discountService;
+        this.posRepository = posRepository;
     }
 
     private static class CartLine {
@@ -62,12 +67,18 @@ public class POSCommand implements Command {
         }
 
         console.println("\n=== POINT OF SALE (POS) ===");
+        console.println((personalPurchaseMode ? "*** PERSONAL PURCHASE MODE ***" : "WORK MODE") + "  [type 'P' to toggle]");
         console.println("Enter items. Leave item code empty to checkout.");
 
         List<CartLine> cart = new ArrayList<>();
 
         while (true) {
-            String code = console.readLine("Item Code (blank to checkout): ");
+            String code = console.readLine("Item Code (blank to checkout, 'P' to toggle mode): ");
+            if (code != null && code.trim().equalsIgnoreCase("P")) {
+                personalPurchaseMode = !personalPurchaseMode;
+                console.printInfo("POS mode changed to: " + (personalPurchaseMode ? "PERSONAL PURCHASE" : "WORK"));
+                continue;
+            }
             if (code == null || code.trim().isEmpty()) break;
             String qtyStr = console.readLine("Quantity: ");
             double qty;
@@ -123,7 +134,43 @@ public class POSCommand implements Command {
 
         // Compute total
         Money grandTotal = cart.stream().map(CartLine::total).reduce(Money.zero(), Money::add);
-        console.println(String.format("\nGrand Total: LKR %.2f", grandTotal.getAmount().doubleValue()));
+        console.println(String.format("\nGross Total: LKR %.2f", grandTotal.getAmount().doubleValue()));
+
+        // Calculate discounts per batch
+        java.math.BigDecimal discountTotalBD = java.math.BigDecimal.ZERO;
+        if (!personalPurchaseMode) {
+            for (CartLine line : cart) {
+                java.math.BigDecimal remaining = java.math.BigDecimal.valueOf(line.qty);
+                List<ShelfStock> stocks = new ArrayList<>(shelfRepo.findAvailableByItemCode(ItemCode.of(line.itemCode)));
+                stocks.sort(this::fifoWithExpiryComparator);
+                for (ShelfStock ss : stocks) {
+                    if (remaining.compareTo(java.math.BigDecimal.ZERO) <= 0) break;
+                    java.math.BigDecimal availableHere = ss.getQuantityOnShelf().getValue();
+                    java.math.BigDecimal take = remaining.min(availableHere);
+                    java.math.BigDecimal d = discountService.calculateBatchDiscount(
+                            line.itemId,
+                            ss.getBatchId(),
+                            ss.getUnitPrice().getAmount(),
+                            take.doubleValue()
+                    );
+                    discountTotalBD = discountTotalBD.add(d);
+                    remaining = remaining.subtract(take);
+                }
+            }
+        }
+        double discountTotal = discountTotalBD.doubleValue();
+        double netTotal = grandTotal.getAmount().doubleValue() - discountTotal;
+        if (netTotal < 0) netTotal = 0;
+        console.println(String.format("Discounts: -LKR %.2f", discountTotal));
+        console.println(String.format("Net Payable: LKR %.2f", netTotal));
+
+        // Personal purchase restrictions
+        if (personalPurchaseMode) {
+            if (netTotal > 10000.0) {
+                console.printError("Personal purchase exceeds limit LKR 10,000. Cancelled.");
+                return;
+            }
+        }
 
         // Cash tendered - loop until sufficient or cancel
         double cash = -1;
@@ -140,7 +187,7 @@ public class POSCommand implements Command {
             }
             try {
                 cash = Double.parseDouble(cashInput);
-                if (cash < grandTotal.getAmount().doubleValue()) {
+                if (cash < netTotal) {
                     console.printError(String.format("Insufficient cash. Need at least LKR %.2f. Try again or enter 'C' to cancel.", grandTotal.getAmount().doubleValue()));
                     continue;
                 }
@@ -149,7 +196,11 @@ public class POSCommand implements Command {
                 console.printError("Invalid cash amount. Please enter a number or 'C' to cancel.");
             }
         }
-        double change = cash - grandTotal.getAmount().doubleValue();
+        double change = cash - netTotal;
+
+        // Build per-batch persistence lines (and then reduce stock)
+        java.util.List<com.syos.infrastructure.persistence.repositories.JpaPOSRepository.PosLine> lines = new java.util.ArrayList<>();
+        java.math.BigDecimal txDiscountTotalBD = java.math.BigDecimal.ZERO;
 
         // Reduce shelf stock using FIFO with expiry override
         UserID userId = UserID.of(sessionManager.getCurrentUserId());
@@ -162,25 +213,60 @@ public class POSCommand implements Command {
                 if (remaining.compareTo(java.math.BigDecimal.ZERO) <= 0) break;
                 java.math.BigDecimal availableHere = ss.getQuantityOnShelf().getValue();
                 java.math.BigDecimal take = remaining.min(availableHere);
+
+                // Compute per-batch discount for this allocation
+                java.math.BigDecimal lineDiscount = personalPurchaseMode ? java.math.BigDecimal.ZERO :
+                        discountService.calculateBatchDiscount(
+                                line.itemId,
+                                ss.getBatchId(),
+                                ss.getUnitPrice().getAmount(),
+                                take.doubleValue()
+                        );
+                txDiscountTotalBD = txDiscountTotalBD.add(lineDiscount);
+
+                // Add line for persistence
+                lines.add(new com.syos.infrastructure.persistence.repositories.JpaPOSRepository.PosLine(
+                        line.itemId,
+                        ss.getBatchId(),
+                        take.doubleValue(),
+                        ss.getUnitPrice().getAmount(),
+                        lineDiscount
+                ));
+
+                // Reduce shelf stock and persist
                 ShelfStock afterSale = ss.sellStock(Quantity.of(take), userId);
                 shelfRepo.save(afterSale);
                 remaining = remaining.subtract(take);
             }
         }
 
-        // Print simple console bill
-        long billNo = BILL_SEQ++;
+        // Create and persist transaction
+        com.syos.infrastructure.persistence.entities.TransactionEntity tx = new com.syos.infrastructure.persistence.entities.TransactionEntity();
+        tx.setUserId(sessionManager.getCurrentUserId());
+        tx.setTransactionType(com.syos.infrastructure.persistence.entities.TransactionEntity.TransactionType.POS);
+        tx.setPaymentMethod(com.syos.infrastructure.persistence.entities.TransactionEntity.PaymentMethod.CASH);
+        tx.setTotalAmount(java.math.BigDecimal.valueOf(grandTotal.getAmount().doubleValue()));
+        tx.setDiscountAmount(personalPurchaseMode ? java.math.BigDecimal.ZERO : discountTotalBD);
+        tx.setCashTendered(java.math.BigDecimal.valueOf(cash));
+        tx.setChangeAmount(java.math.BigDecimal.valueOf(change));
+
+        com.syos.infrastructure.persistence.repositories.JpaPOSRepository.PersistResult pr = posRepository.savePOSCheckout(tx, lines);
+
+        // Print console bill with assigned bill number
         console.println("\n===== BILL (POS) =====");
-        console.println("Bill No: " + billNo);
+        console.println("Bill No: " + pr.billNumber());
         console.println("Date/Time: " + LocalDateTime.now());
-        for (CartLine l : cart) {
-            console.println(String.format("%s  x %.2f  @ LKR %.2f  = LKR %.2f",
-                    l.itemName, l.qty, l.unitPrice.getAmount().doubleValue(), l.total().getAmount().doubleValue()));
+        for (com.syos.infrastructure.persistence.repositories.JpaPOSRepository.PosLine pl : lines) {
+            // We don't have item names here; show item id and qty
+            console.println(String.format("Item #%d  x %.2f  @ LKR %.2f  Disc: LKR %.2f",
+                    pl.itemId(), pl.quantity(), pl.unitPrice().doubleValue(), pl.discount() == null ? 0.0 : pl.discount().doubleValue()));
         }
-        console.println(String.format("TOTAL: LKR %.2f", grandTotal.getAmount().doubleValue()));
+        console.println(String.format("GROSS: LKR %.2f", grandTotal.getAmount().doubleValue()));
+        console.println(String.format("DISCOUNT: -LKR %.2f", personalPurchaseMode ? 0.0 : discountTotalBD.doubleValue()));
+        console.println(String.format("NET: LKR %.2f", netTotal));
         console.println(String.format("CASH:  LKR %.2f", cash));
         console.println(String.format("CHANGE: LKR %.2f", change));
-        console.println("Channel: POS");
+        console.println("Channel: POS" + (personalPurchaseMode ? " (PERSONAL PURCHASE)" : ""));
         console.println("======================");
 
         console.println("\nPress Enter to continue...");

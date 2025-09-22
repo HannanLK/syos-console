@@ -22,6 +22,8 @@ public class InMemoryShelfStockRepository implements ShelfStockRepository {
         Long id = shelfStock.getId();
         if (id == null) {
             id = seq.getAndIncrement();
+            // Rebuild entity with assigned ID to preserve identity across updates
+            shelfStock = new ShelfStock.Builder(shelfStock).id(id).build();
         }
         store.put(id, shelfStock);
     }
