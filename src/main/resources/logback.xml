@@ -279,11 +279,11 @@
 
     <root level="${LOG_LEVEL}">
         <!-- Console logging only in development mode -->
-        <if condition='property("CONSOLE_LOGGING").equals("true")'>
-            <then>
-                <appender-ref ref="CONSOLE"/>
-            </then>
-        </if>
+<!--        <if condition='property("CONSOLE_LOGGING").equals("true")'>-->
+<!--            <then>-->
+<!--                <appender-ref ref="CONSOLE"/>-->
+<!--            </then>-->
+<!--        </if>-->
         
         <!-- Always log to files -->
         <appender-ref ref="ASYNC_APP_FILE"/>

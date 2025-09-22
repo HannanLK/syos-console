@@ -36,7 +36,7 @@ public class LoggingManager {
                 context.reset(); // Clear any default configuration
                 
                 // Load logback configuration
-                InputStream configStream = LoggingManager.class.getResourceAsStream("/logging/logback.xml");
+                InputStream configStream = LoggingManager.class.getResourceAsStream("/logback.xml");
                 if (configStream != null) {
                     configurator.doConfigure(configStream);
                     configStream.close();

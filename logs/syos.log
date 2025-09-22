@@ -1,0 +1,38 @@
+2025-09-22 10:49:17.430 [main] INFO  com.syos.Main [Main.java:94] - Starting SYOS Console Application with Enhanced Product Management - Environment: production
+2025-09-22 10:49:17.433 [main] INFO  com.syos.Main [Main.java:100] - Log directory: D:\4th_final\sem1\clean_cod\syos\syos-console\logs
+2025-09-22 10:49:17.439 [main] INFO  com.syos.Main [Main.java:119] - Event Bus initialized for domain event publishing
+2025-09-22 10:49:17.440 [main] INFO  com.syos.Main [Main.java:122] - Initializing PostgreSQL database connection...
+2025-09-22 10:49:17.441 [main] INFO  c.s.i.config.DatabaseConfig [DatabaseConfig.java:34] - Initializing database connection to: jdbc:postgresql://localhost:5432/syosdb
+2025-09-22 10:49:18.689 [main] WARN  o.hibernate.orm.connections.pooling [?:?] - HHH10001002: Using built-in connection pool (not intended for production use)
+2025-09-22 10:49:18.912 [main] WARN  org.hibernate.orm.deprecation [DialectFactoryImpl.java:152] - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-09-22 10:49:21.338 [main] INFO  c.s.i.config.DatabaseConfig [DatabaseConfig.java:45] - EntityManagerFactory created successfully
+2025-09-22 10:49:21.429 [main] INFO  c.s.i.config.DatabaseConfig [?:?] - Database connection fully initialized and tested
+2025-09-22 10:49:21.434 [main] WARN  com.syos.Main [Main.java:279] - Using placeholder for ShelfStockRepository
+2025-09-22 10:49:21.434 [main] WARN  com.syos.Main [Main.java:285] - Using placeholder for WebInventoryRepository
+2025-09-22 10:49:21.435 [main] INFO  c.s.i.config.DatabaseInitializer [DatabaseInitializer.java:22] - Initializing default users in database...
+2025-09-22 10:49:22.321 [main] INFO  c.s.i.config.DatabaseInitializer [DatabaseInitializer.java:64] - Default users initialization completed
+2025-09-22 10:49:22.321 [main] INFO  com.syos.Main [?:?] - PostgreSQL repositories initialized successfully
+2025-09-22 10:49:22.329 [main] INFO  com.syos.Main [Main.java:323] - System ready. Enhanced SYOS Console Application initialized.
+2025-09-22 10:49:22.329 [main] INFO  com.syos.Main [Main.java:324] - User repository initialized: JpaUserRepository
+2025-09-22 10:49:22.329 [main] INFO  com.syos.Main [Main.java:325] - Product management system initialized
+2025-09-22 10:49:22.329 [main] INFO  com.syos.Main [Main.java:326] - Menu system with enhanced product workflow initialized
+2025-09-22 10:49:22.329 [main] INFO  com.syos.Main [Main.java:329] - Database persistence enabled - data will be saved to PostgreSQL
+2025-09-22 10:50:34.552 [main] INFO  com.syos.Main [?:?] - Starting SYOS Console Application with Enhanced Product Management - Environment: production
+2025-09-22 10:50:34.556 [main] INFO  com.syos.Main [Main.java:100] - Log directory: D:\4th_final\sem1\clean_cod\syos\syos-console\logs
+2025-09-22 10:50:34.563 [main] INFO  com.syos.Main [Main.java:119] - Event Bus initialized for domain event publishing
+2025-09-22 10:50:34.564 [main] INFO  com.syos.Main [Main.java:122] - Initializing PostgreSQL database connection...
+2025-09-22 10:50:34.565 [main] INFO  c.s.i.config.DatabaseConfig [DatabaseConfig.java:34] - Initializing database connection to: jdbc:postgresql://localhost:5432/syosdb
+2025-09-22 10:50:35.806 [main] WARN  o.hibernate.orm.connections.pooling [?:?] - HHH10001002: Using built-in connection pool (not intended for production use)
+2025-09-22 10:50:36.105 [main] WARN  org.hibernate.orm.deprecation [DialectFactoryImpl.java:152] - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-09-22 10:50:38.578 [main] INFO  c.s.i.config.DatabaseConfig [DatabaseConfig.java:45] - EntityManagerFactory created successfully
+2025-09-22 10:50:38.673 [main] INFO  c.s.i.config.DatabaseConfig [DatabaseConfig.java:51] - Database connection fully initialized and tested
+2025-09-22 10:50:38.677 [main] WARN  com.syos.Main [Main.java:279] - Using placeholder for ShelfStockRepository
+2025-09-22 10:50:38.678 [main] WARN  com.syos.Main [?:?] - Using placeholder for WebInventoryRepository
+2025-09-22 10:50:38.679 [main] INFO  c.s.i.config.DatabaseInitializer [DatabaseInitializer.java:22] - Initializing default users in database...
+2025-09-22 10:50:39.440 [main] INFO  c.s.i.config.DatabaseInitializer [DatabaseInitializer.java:64] - Default users initialization completed
+2025-09-22 10:50:39.440 [main] INFO  com.syos.Main [Main.java:144] - PostgreSQL repositories initialized successfully
+2025-09-22 10:50:39.455 [main] INFO  com.syos.Main [?:?] - System ready. Enhanced SYOS Console Application initialized.
+2025-09-22 10:50:39.456 [main] INFO  com.syos.Main [?:?] - User repository initialized: JpaUserRepository
+2025-09-22 10:50:39.458 [main] INFO  com.syos.Main [Main.java:325] - Product management system initialized
+2025-09-22 10:50:39.459 [main] INFO  com.syos.Main [Main.java:326] - Menu system with enhanced product workflow initialized
+2025-09-22 10:50:39.459 [main] INFO  com.syos.Main [Main.java:329] - Database persistence enabled - data will be saved to PostgreSQL
