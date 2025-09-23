@@ -1,5 +1,5 @@
 -- =============================================================================
--- SYOS Database Schema - V9__Update_Transaction_Entities_For_JPA.sql
+-- SYOS Database Schema - V13__Update_Transaction_Entities_For_JPA.sql
 -- Updates transaction tables to match JPA entity definitions
 -- =============================================================================
 
@@ -82,6 +82,22 @@ BEGIN
         WHERE table_name = 'bills' AND column_name = 'bill_id'
     ) THEN
         ALTER TABLE bills RENAME COLUMN id TO bill_id;
+    END IF;
+    
+    -- Ensure bill_serial_number column exists (BillEntity maps to this)
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'bills' AND column_name = 'bill_serial_number'
+    ) THEN
+        ALTER TABLE bills ADD COLUMN bill_serial_number VARCHAR(50);
+    END IF;
+    
+    -- Backfill bill_serial_number from legacy bill_number if present
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'bills' AND column_name = 'bill_number'
+    ) THEN
+        EXECUTE 'UPDATE bills SET bill_serial_number = bill_number WHERE bill_serial_number IS NULL';
     END IF;
     
     -- Ensure customer_name column exists

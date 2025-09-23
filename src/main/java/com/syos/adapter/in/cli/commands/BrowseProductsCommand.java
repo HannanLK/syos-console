@@ -55,19 +55,43 @@ public class BrowseProductsCommand implements Command {
                 return;
             }
 
-            // Sort by item name (requires lookup), fallback to item code
-            items.sort(Comparator.comparing(w -> lookupItemName(w).orElse(w.getItemCode().getValue())));
+            // Aggregate by item code to avoid duplicate lines per batch
+            java.util.Map<String, java.math.BigDecimal> qtyByCode = new java.util.LinkedHashMap<>();
+            java.util.Map<String, java.math.BigDecimal> priceByCode = new java.util.LinkedHashMap<>();
+            java.util.Map<String, Long> anyItemIdByCode = new java.util.LinkedHashMap<>();
+            for (WebInventory w : items) {
+                String code = w.getItemCode().getValue();
+                qtyByCode.merge(code, w.getQuantityAvailable().toBigDecimal(), java.math.BigDecimal::add);
+                // preserve first seen price for display
+                priceByCode.putIfAbsent(code, w.getWebPrice().toBigDecimal());
+                anyItemIdByCode.putIfAbsent(code, w.getItemId());
+            }
+
+            // Sort codes by item name (lookup), fallback to code
+            java.util.List<String> codes = new java.util.ArrayList<>(qtyByCode.keySet());
+            codes.sort(Comparator.comparing(code -> {
+                Long itemId = anyItemIdByCode.get(code);
+                if (itemId != null) {
+                    try { return itemRepository.findById(itemId).map(ItemMasterFile::getItemName).orElse(code); } catch (Exception e) { return code; }
+                }
+                return code;
+            }));
 
             console.println("\nAvailable Online Products:");
             console.println(String.format("%-6s %-20s %-12s %-10s %-8s", "No.", "Item Name", "Item Code", "Price(LKR)", "Qty"));
             console.println("-".repeat(60));
 
             int index = 1;
-            for (WebInventory w : items) {
-                String name = lookupItemName(w).orElse("<Unknown Item>");
-                String code = w.getItemCode().getValue();
-                String price = w.getWebPrice().toBigDecimal().toPlainString();
-                String qty = w.getQuantityAvailable().toBigDecimal().toPlainString();
+            for (String code : codes) {
+                Long itemId = anyItemIdByCode.get(code);
+                String name;
+                try {
+                    name = itemRepository.findById(itemId).map(ItemMasterFile::getItemName).orElse("<Unknown Item>");
+                } catch (Exception ex) {
+                    name = "<Unknown Item>";
+                }
+                String price = priceByCode.get(code).toPlainString();
+                String qty = qtyByCode.get(code).toPlainString();
                 console.println(String.format("%-6d %-20s %-12s %-10s %-8s", index++, truncate(name, 20), code, price, qty));
             }
 

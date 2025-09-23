@@ -39,18 +39,60 @@ public class JpaShelfStockRepository implements ShelfStockRepository {
             // Ensure SHELF location exists (location_code = shelfCode)
             Long locationId = getOrCreateLocation(em, shelfStock.getShelfCode(), "SHELF");
 
-            // Upsert into shelf_stock by (item_id, batch_id, location_id)
-            Query q = em.createNativeQuery(
-                    "INSERT INTO shelf_stock(item_id, batch_id, location_id, quantity, last_restocked) " +
-                    "VALUES (?,?,?,?, CURRENT_TIMESTAMP) " +
-                    "ON CONFLICT (item_id, batch_id, location_id) DO UPDATE " +
-                    "SET quantity = shelf_stock.quantity + EXCLUDED.quantity, " +
-                    "updated_at = CURRENT_TIMESTAMP, last_restocked = CURRENT_TIMESTAMP");
-            q.setParameter(1, shelfStock.getItemId());
-            q.setParameter(2, shelfStock.getBatchId());
-            q.setParameter(3, locationId);
-            q.setParameter(4, shelfStock.getQuantityOnShelf().toBigDecimal());
-            q.executeUpdate();
+            // Read current quantity to compute delta (sale vs restock)
+            BigDecimal newQty = shelfStock.getQuantityOnShelf().toBigDecimal();
+            BigDecimal currentQty = (BigDecimal) em.createNativeQuery(
+                    "SELECT quantity FROM shelf_stock WHERE item_id = ? AND batch_id = ? AND location_id = ?")
+                    .setParameter(1, shelfStock.getItemId())
+                    .setParameter(2, shelfStock.getBatchId())
+                    .setParameter(3, locationId)
+                    .getResultStream().findFirst().orElse(null);
+
+            BigDecimal delta;
+            if (currentQty == null) {
+                // First time: insert the provided quantity as-is
+                delta = new BigDecimal("0");
+                em.createNativeQuery(
+                        "INSERT INTO shelf_stock(item_id, batch_id, location_id, quantity, last_restocked) VALUES (?,?,?,?, CURRENT_TIMESTAMP)")
+                        .setParameter(1, shelfStock.getItemId())
+                        .setParameter(2, shelfStock.getBatchId())
+                        .setParameter(3, locationId)
+                        .setParameter(4, newQty.max(BigDecimal.ZERO))
+                        .executeUpdate();
+            } else {
+                delta = newQty.subtract(currentQty);
+                if (delta.signum() >= 0) {
+                    // Restock/transfer: accumulate on top of existing quantity
+                    BigDecimal finalQty = currentQty.add(newQty);
+                    em.createNativeQuery(
+                            "UPDATE shelf_stock SET quantity = ?, last_restocked = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE item_id = ? AND batch_id = ? AND location_id = ?")
+                            .setParameter(1, finalQty)
+                            .setParameter(2, shelfStock.getItemId())
+                            .setParameter(3, shelfStock.getBatchId())
+                            .setParameter(4, locationId)
+                            .executeUpdate();
+                    // Recompute delta relative to DB after update for batch adjustment logic below
+                    delta = finalQty.subtract(currentQty);
+                } else {
+                    // Sale: set exact new remaining quantity, clamp to zero
+                    BigDecimal finalQty = newQty.max(BigDecimal.ZERO);
+                    em.createNativeQuery(
+                            "UPDATE shelf_stock SET quantity = ?, updated_at = CURRENT_TIMESTAMP WHERE item_id = ? AND batch_id = ? AND location_id = ?")
+                            .setParameter(1, finalQty)
+                            .setParameter(2, shelfStock.getItemId())
+                            .setParameter(3, shelfStock.getBatchId())
+                            .setParameter(4, locationId)
+                            .executeUpdate();
+                }
+            }
+
+            // If this was a sale (delta < 0), also reduce batches.quantity_available accordingly
+            if (currentQty != null && delta.signum() < 0) {
+                em.createNativeQuery("UPDATE batches SET quantity_available = quantity_available + ? WHERE id = ?")
+                        .setParameter(1, delta) // delta is negative
+                        .setParameter(2, shelfStock.getBatchId())
+                        .executeUpdate();
+            }
 
             em.getTransaction().commit();
         } catch (RuntimeException ex) {

@@ -39,6 +39,9 @@ public class TransactionEntity {
     @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount;
     
+    @Column(name = "subtotal_amount", nullable = false, precision = 12, scale = 2)
+    private BigDecimal subtotalAmount;
+    
     @Column(name = "discount_amount", precision = 10, scale = 2)
     private BigDecimal discountAmount;
     
@@ -46,17 +49,23 @@ public class TransactionEntity {
     @Column(name = "payment_method", nullable = false)
     private PaymentMethod paymentMethod;
     
-    @Column(name = "synex_points_awarded")
+    @Column(name = "synex_points_earned")
     private Integer synexPointsAwarded;
     
     @Column(name = "cash_tendered", precision = 10, scale = 2)
     private BigDecimal cashTendered;
     
-    @Column(name = "change_amount", precision = 10, scale = 2)
+    @Column(name = "change_given", precision = 10, scale = 2)
     private BigDecimal changeAmount;
     
     @Column(name = "bill_serial_number")
     private String billSerialNumber;
+
+    @Column(name = "transaction_number", nullable = false)
+    private String transactionNumber;
+
+    @Column(name = "cashier_id")
+    private Long cashierId;
     
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
@@ -120,6 +129,9 @@ public class TransactionEntity {
     public BigDecimal getTotalAmount() { return totalAmount; }
     public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
     
+    public BigDecimal getSubtotalAmount() { return subtotalAmount; }
+    public void setSubtotalAmount(BigDecimal subtotalAmount) { this.subtotalAmount = subtotalAmount; }
+    
     public BigDecimal getDiscountAmount() { return discountAmount; }
     public void setDiscountAmount(BigDecimal discountAmount) { this.discountAmount = discountAmount; }
     
@@ -137,6 +149,12 @@ public class TransactionEntity {
     
     public String getBillSerialNumber() { return billSerialNumber; }
     public void setBillSerialNumber(String billSerialNumber) { this.billSerialNumber = billSerialNumber; }
+
+    public String getTransactionNumber() { return transactionNumber; }
+    public void setTransactionNumber(String transactionNumber) { this.transactionNumber = transactionNumber; }
+
+    public Long getCashierId() { return cashierId; }
+    public void setCashierId(Long cashierId) { this.cashierId = cashierId; }
     
     public TransactionStatus getStatus() { return status; }
     public void setStatus(TransactionStatus status) { this.status = status; }

@@ -20,6 +20,11 @@
         <class>com.syos.infrastructure.persistence.entities.TransactionItemEntity</class>
         <class>com.syos.infrastructure.persistence.entities.BillEntity</class>
         
+        <!-- Promotion entities -->
+        <class>com.syos.infrastructure.persistence.entities.PromotionEntities$PromotionEntity</class>
+        <class>com.syos.infrastructure.persistence.entities.PromotionEntities$PromotionItemEntity</class>
+        <class>com.syos.infrastructure.persistence.entities.PromotionEntities$PromotionBatchEntity</class>
+        
         <properties>
             <!-- Database Connection Properties -->
             <property name="jakarta.persistence.jdbc.driver" value="org.postgresql.Driver"/>

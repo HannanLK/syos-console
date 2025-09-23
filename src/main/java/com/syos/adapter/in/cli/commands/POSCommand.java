@@ -245,11 +245,16 @@ public class POSCommand implements Command {
         tx.setUserId(sessionManager.getCurrentUserId());
         tx.setTransactionType(com.syos.infrastructure.persistence.entities.TransactionEntity.TransactionType.POS);
         tx.setPaymentMethod(com.syos.infrastructure.persistence.entities.TransactionEntity.PaymentMethod.CASH);
-        tx.setTotalAmount(java.math.BigDecimal.valueOf(grandTotal.getAmount().doubleValue()));
+        // Set amounts: subtotal before discount, total as gross (kept for compatibility)
+        java.math.BigDecimal grossBD = java.math.BigDecimal.valueOf(grandTotal.getAmount().doubleValue());
+        tx.setSubtotalAmount(grossBD);
+        tx.setTotalAmount(grossBD);
         tx.setDiscountAmount(personalPurchaseMode ? java.math.BigDecimal.ZERO : discountTotalBD);
         tx.setCashTendered(java.math.BigDecimal.valueOf(cash));
         tx.setChangeAmount(java.math.BigDecimal.valueOf(change));
-
+        // Set cashier for POS to satisfy DB check constraint
+        tx.setCashierId(sessionManager.getCurrentUserId());
+        
         com.syos.infrastructure.persistence.repositories.JpaPOSRepository.PersistResult pr = posRepository.savePOSCheckout(tx, lines);
 
         // Print console bill with assigned bill number

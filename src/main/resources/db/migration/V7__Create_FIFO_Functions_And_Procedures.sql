@@ -1,5 +1,5 @@
 -- =============================================================================
--- SYOS Database Schema - V6__Create_FIFO_Functions_And_Procedures.sql
+-- SYOS Database Schema - V7__Create_FIFO_Functions_And_Procedures.sql
 -- FIFO with Expiry Priority Functions and Stock Management Procedures
 -- =============================================================================
 

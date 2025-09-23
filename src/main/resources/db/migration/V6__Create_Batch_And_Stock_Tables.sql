@@ -1,5 +1,5 @@
 -- =============================================================================
--- SYOS Database Schema - V5__Create_Batch_And_Stock_Tables.sql
+-- SYOS Database Schema - V6__Create_Batch_And_Stock_Tables.sql
 -- Stock management with FIFO support and batch tracking
 -- =============================================================================
 

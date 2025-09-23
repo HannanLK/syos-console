@@ -1,5 +1,5 @@
 -- =============================================================================
--- SYOS Database Schema - V4__Create_Warehouse_And_Inventory_Tables.sql
+-- SYOS Database Schema - V5__Create_Warehouse_And_Inventory_Tables.sql
 -- Warehouse, Inventory Management, and Stock Transfer Tables
 -- =============================================================================
 

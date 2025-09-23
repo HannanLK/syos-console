@@ -1,5 +1,5 @@
 -- =============================================================================
--- SYOS Database Schema - V10__Alter_Batches_Add_Received_By_And_Align_Expiry_Type.sql
+-- SYOS Database Schema - V14__Alter_Batches_Add_Received_By_And_Align_Expiry_Type.sql
 -- Fixes for batches table to match JPA entity and runtime usage
 -- - Adds missing received_by column if it does not exist
 -- - Ensures expiry_date is TIMESTAMP (align with LocalDateTime in JPA)

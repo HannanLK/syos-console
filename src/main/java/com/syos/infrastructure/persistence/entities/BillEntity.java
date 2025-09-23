@@ -24,6 +24,10 @@ public class BillEntity {
     @Column(name = "bill_id")
     private Long billId;
     
+    // Legacy column kept in DB (NOT NULL). Keep it in sync with bill_serial_number.
+    @Column(name = "bill_number")
+    private String billNumber;
+
     @Column(name = "bill_serial_number", nullable = false, unique = true)
     private String billSerialNumber;
     
@@ -52,8 +56,8 @@ public class BillEntity {
     @Column(name = "synex_points_awarded")
     private Integer synexPointsAwarded;
     
-    @Lob
-    @Column(name = "pdf_content", columnDefinition = "BYTEA")
+    // Exclude PDF content from persistence to avoid OID vs BYTEA mismatch; we only print to console for now
+    @Column(name = "pdf_content", insertable = false, updatable = false)
     private byte[] pdfContent;
     
     @Column(name = "pdf_file_path")
@@ -71,6 +75,8 @@ public class BillEntity {
     public BillEntity(String billSerialNumber, TransactionEntity transaction) {
         this();
         this.billSerialNumber = billSerialNumber;
+        // keep legacy column in sync to satisfy NOT NULL constraint in older schemas
+        this.billNumber = billSerialNumber;
         this.transaction = transaction;
         this.totalAmount = transaction.getTotalAmount();
         this.discountAmount = transaction.getDiscountAmount();
@@ -83,8 +89,15 @@ public class BillEntity {
     public Long getBillId() { return billId; }
     public void setBillId(Long billId) { this.billId = billId; }
     
+    public String getBillNumber() { return billNumber; }
+    public void setBillNumber(String billNumber) { this.billNumber = billNumber; }
+
     public String getBillSerialNumber() { return billSerialNumber; }
-    public void setBillSerialNumber(String billSerialNumber) { this.billSerialNumber = billSerialNumber; }
+    public void setBillSerialNumber(String billSerialNumber) { 
+        this.billSerialNumber = billSerialNumber; 
+        // keep legacy column synchronized
+        this.billNumber = billSerialNumber;
+    }
     
     public TransactionEntity getTransaction() { return transaction; }
     public void setTransaction(TransactionEntity transaction) { this.transaction = transaction; }

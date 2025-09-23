@@ -40,8 +40,13 @@ public class TransactionItemEntity {
     @Column(name = "subtotal", nullable = false, precision = 10, scale = 2)
     private BigDecimal subtotal;
     
-    @Column(name = "discount_applied", precision = 10, scale = 2)
+    // Align with DB column name
+    @Column(name = "discount_amount", precision = 10, scale = 2)
     private BigDecimal discountApplied;
+
+    // Required by DB schema (NOT NULL)
+    @Column(name = "total_price", nullable = false, precision = 12, scale = 2)
+    private BigDecimal totalPrice;
     
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -57,6 +62,16 @@ public class TransactionItemEntity {
         this.quantity = quantity;
         this.unitPrice = unitPrice;
         this.subtotal = unitPrice.multiply(BigDecimal.valueOf(quantity));
+        recalcTotal();
+    }
+    
+    // Lifecycle hooks
+    @PrePersist
+    protected void onCreate() {
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
+        recalcTotal();
     }
     
     // Getters and Setters
@@ -73,19 +88,24 @@ public class TransactionItemEntity {
     public void setQuantity(Integer quantity) { 
         this.quantity = quantity;
         recalculateSubtotal();
+        recalcTotal();
     }
     
     public BigDecimal getUnitPrice() { return unitPrice; }
     public void setUnitPrice(BigDecimal unitPrice) { 
         this.unitPrice = unitPrice;
         recalculateSubtotal();
+        recalcTotal();
     }
     
     public BigDecimal getSubtotal() { return subtotal; }
-    public void setSubtotal(BigDecimal subtotal) { this.subtotal = subtotal; }
+    public void setSubtotal(BigDecimal subtotal) { this.subtotal = subtotal; recalcTotal(); }
     
     public BigDecimal getDiscountApplied() { return discountApplied; }
-    public void setDiscountApplied(BigDecimal discountApplied) { this.discountApplied = discountApplied; }
+    public void setDiscountApplied(BigDecimal discountApplied) { this.discountApplied = discountApplied; recalcTotal(); }
+
+    public BigDecimal getTotalPrice() { return totalPrice; }
+    public void setTotalPrice(BigDecimal totalPrice) { this.totalPrice = totalPrice; }
     
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
@@ -95,6 +115,15 @@ public class TransactionItemEntity {
         if (quantity != null && unitPrice != null) {
             this.subtotal = unitPrice.multiply(BigDecimal.valueOf(quantity));
         }
+    }
+
+    private void recalcTotal() {
+        BigDecimal discount = discountApplied != null ? discountApplied : BigDecimal.ZERO;
+        BigDecimal base = subtotal != null ? subtotal : BigDecimal.ZERO;
+        BigDecimal total = base.subtract(discount);
+        // prevent negative totals
+        if (total.signum() < 0) total = BigDecimal.ZERO;
+        this.totalPrice = total;
     }
     
     public BigDecimal getDiscountedSubtotal() {

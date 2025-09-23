@@ -1,5 +1,5 @@
 -- =============================================================================
--- V11__Sync_Batches_Cost_Columns.sql
+-- V15__Sync_Batches_Cost_Columns.sql
 -- Purpose: Resolve runtime violation where batches.cost_price is NOT NULL while
 --          application inserts only cost_per_unit. We backfill and keep columns
 --          synchronized via trigger so either column can satisfy constraints.

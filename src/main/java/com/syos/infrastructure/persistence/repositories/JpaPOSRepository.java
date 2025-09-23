@@ -31,6 +31,11 @@ public class JpaPOSRepository {
         try {
             em.getTransaction().begin();
 
+            // Ensure transaction number is set (DB requires NOT NULL & UNIQUE)
+            if (tx.getTransactionNumber() == null || tx.getTransactionNumber().trim().isEmpty()) {
+                tx.setTransactionNumber("TX" + System.currentTimeMillis());
+            }
+
             // Persist transaction first
             em.persist(tx);
             em.flush();

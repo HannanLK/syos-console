@@ -26,21 +26,43 @@ public class JpaPromotionRepository {
     public Optional<PromotionEntity> findActiveBatchPromotionForItemAndBatch(Long itemId, Long batchId, LocalDateTime at) {
         EntityManager em = emf.createEntityManager();
         try {
-            String jpql = "SELECT p FROM PromotionEntity p " +
-                    "JOIN p.items pi " +
-                    "JOIN p.batches pb " +
-                    "WHERE pi.id.itemId = :itemId AND pb.id.batchId = :batchId " +
-                    "AND p.active = true AND p.batchSpecific = true " +
-                    "AND p.startDate <= :at AND p.endDate >= :at";
-            TypedQuery<PromotionEntity> q = em.createQuery(jpql, PromotionEntity.class);
-            q.setParameter("itemId", itemId);
-            q.setParameter("batchId", batchId);
-            q.setParameter("at", at);
-            List<PromotionEntity> list = q.getResultList();
-            if (list.isEmpty()) return Optional.empty();
-            // In case of multiple, pick the most recent startDate
-            list.sort((a,b) -> b.getStartDate().compareTo(a.getStartDate()));
-            return Optional.of(list.get(0));
+            // Use native SQL to avoid reliance on JPA entity registration in HQL parsing
+            String sql = "SELECT p.promotion_type, p.discount_value, p.promo_code, p.promo_name, p.start_date, p.end_date " +
+                    "FROM promotions p " +
+                    "JOIN promotion_items pi ON pi.promotion_id = p.id " +
+                    "JOIN promotion_batches pb ON pb.promotion_id = p.id " +
+                    "WHERE pi.item_id = ? AND pb.batch_id = ? " +
+                    "AND p.is_active = true AND p.is_batch_specific = true " +
+                    "AND p.start_date <= ? AND p.end_date >= ? " +
+                    "ORDER BY p.start_date DESC LIMIT 1";
+
+            jakarta.persistence.Query q = em.createNativeQuery(sql);
+            q.setParameter(1, itemId);
+            q.setParameter(2, batchId);
+            q.setParameter(3, at);
+            q.setParameter(4, at);
+            @SuppressWarnings("unchecked")
+            List<Object[]> rows = q.getResultList();
+            if (rows.isEmpty()) return Optional.empty();
+            Object[] r = rows.get(0);
+            String typeStr = (String) r[0];
+            java.math.BigDecimal discount = (java.math.BigDecimal) r[1];
+            String code = (String) r[2];
+            String name = (String) r[3];
+            java.time.LocalDateTime start = (java.time.LocalDateTime) r[4];
+            java.time.LocalDateTime end = (java.time.LocalDateTime) r[5];
+
+            PromotionEntity p = new PromotionEntity();
+            // Set minimal fields used by DiscountService
+            p.setPromotionType(PromotionType.valueOf(typeStr));
+            p.setDiscountValue(discount);
+            p.setPromoCode(code);
+            p.setPromoName(name);
+            p.setStartDate(start);
+            p.setEndDate(end);
+            p.setActive(true);
+            p.setBatchSpecific(true);
+            return Optional.of(p);
         } finally {
             em.close();
         }

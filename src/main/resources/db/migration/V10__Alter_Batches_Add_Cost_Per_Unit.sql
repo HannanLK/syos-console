@@ -1,5 +1,5 @@
 -- =============================================================================
--- V8__Alter_Batches_Add_Cost_Per_Unit.sql
+-- V10__Alter_Batches_Add_Cost_Per_Unit.sql
 -- Purpose: Align database schema with domain/JPA by adding cost_per_unit column
 -- Context: Runtime error indicated missing column "cost_per_unit" on table "batches"
 -- =============================================================================

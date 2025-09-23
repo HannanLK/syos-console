@@ -16,11 +16,27 @@ public class InMemoryWebInventoryRepository implements WebInventoryRepository {
 
     @Override
     public void save(WebInventory webInventory) {
+        // Merge-on-save semantics: if an entry for the same (itemId,batchId) exists,
+        // reuse its id and replace it to avoid duplicate rows for the same product/batch.
+        Long existingId = findIdByItemAndBatch(webInventory.getItemId(), webInventory.getBatchId());
         Long id = webInventory.getId();
-        if (id == null) {
+        if (existingId != null) {
+            // Prefer existing ID to update in place
+            id = existingId;
+        } else if (id == null) {
             id = seq.getAndIncrement();
         }
-        store.put(id, webInventory);
+        store.put(id, new com.syos.domain.entities.WebInventory.Builder(webInventory).id(id).build());
+    }
+
+    private Long findIdByItemAndBatch(Long itemId, Long batchId) {
+        for (Map.Entry<Long, WebInventory> e : store.entrySet()) {
+            WebInventory w = e.getValue();
+            if (java.util.Objects.equals(w.getItemId(), itemId) && java.util.Objects.equals(w.getBatchId(), batchId)) {
+                return e.getKey();
+            }
+        }
+        return null;
     }
 
     @Override

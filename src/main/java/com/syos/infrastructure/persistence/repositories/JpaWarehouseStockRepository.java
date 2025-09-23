@@ -125,8 +125,8 @@ public class JpaWarehouseStockRepository implements WarehouseStockRepository {
                     " im.item_code AS item_code, " +
                     " ws.item_id AS item_id, " +
                     " ws.batch_id AS batch_id, " +
-                    " ws.quantity AS quantity_received, " +
-                    " (ws.quantity - COALESCE(ws.reserved_quantity, 0)) AS quantity_available, " +
+                    " COALESCE(ws.quantity_received, ws.quantity) AS quantity_received, " +
+                    " COALESCE(ws.quantity_available, (ws.quantity - COALESCE(ws.reserved_quantity, 0))) AS quantity_available, " +
                     " ws.received_date AS received_date, " +
                     " b.expiry_date AS expiry_date, " +
                     " COALESCE(ws.created_by, 0) AS received_by, " +
@@ -141,7 +141,7 @@ public class JpaWarehouseStockRepository implements WarehouseStockRepository {
                     " JOIN batches b ON b.id = ws.batch_id " +
                     " JOIN locations l ON l.id = ws.location_id " +
                     " WHERE im.item_code = :itemCode " +
-                    "   AND (ws.quantity - COALESCE(ws.reserved_quantity, 0)) > 0 " +
+                    "   AND COALESCE(ws.quantity_available, (ws.quantity - COALESCE(ws.reserved_quantity, 0))) > 0 " +
                     " ORDER BY ws.received_date ASC";
 
             jakarta.persistence.Query query = em.createNativeQuery(sql);
