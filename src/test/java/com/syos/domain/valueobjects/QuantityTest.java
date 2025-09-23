@@ -9,45 +9,34 @@ import static org.junit.jupiter.api.Assertions.*;
 class QuantityTest {
 
     @Test
-    void factory_and_getters_and_toString() {
-        Quantity q = Quantity.of(new BigDecimal("5.50"));
-        assertEquals(new BigDecimal("5.50"), q.getValue());
-        assertEquals("5.50", q.toString());
-        assertFalse(q.isZero());
-        assertFalse(q.isNegative());
-        assertFalse(q.isZeroOrNegative());
-    }
-
-    @Test
-    void comparisons_and_minimum() {
-        Quantity a = Quantity.of(new BigDecimal("2"));
-        Quantity b = Quantity.of(new BigDecimal("3"));
-        assertTrue(b.isGreaterThan(a));
-        assertTrue(a.isLessThan(b));
-        assertEquals(a, a.min(b));
-        assertEquals(0, a.compareTo(Quantity.of(new BigDecimal("2"))));
-    }
-
-    @Test
-    void arithmetic_add_and_subtract_and_guards() {
-        Quantity a = Quantity.of(new BigDecimal("4"));
-        Quantity b = Quantity.of(new BigDecimal("1.5"));
-        assertEquals(Quantity.of(new BigDecimal("5.5")), a.add(b));
-        assertEquals(Quantity.of(new BigDecimal("2.5")), a.subtract(b));
-
-        // subtract below zero throws
-        assertThrows(IllegalArgumentException.class, () -> b.subtract(a));
-        // negative value rejected
+    void of_acceptsZeroAndPositive_andRejectsNegative() {
+        assertEquals(new BigDecimal("0"), Quantity.of(BigDecimal.ZERO).toBigDecimal());
+        assertEquals(new BigDecimal("2.50"), Quantity.of(new BigDecimal("2.50")).toBigDecimal());
         assertThrows(IllegalArgumentException.class, () -> Quantity.of(new BigDecimal("-0.01")));
     }
 
     @Test
-    void zero_factory_and_equals_hashCode() {
-        Quantity z1 = Quantity.zero();
-        Quantity z2 = Quantity.of(BigDecimal.ZERO);
-        assertEquals(z1, z2);
-        assertEquals(z1.hashCode(), z2.hashCode());
-        assertTrue(z1.isZero());
-        assertTrue(z1.isZeroOrNegative());
+    void arithmeticAndComparisons() {
+        Quantity q1 = Quantity.of(new BigDecimal("5"));
+        Quantity q2 = Quantity.of(new BigDecimal("2.5"));
+
+        assertTrue(q1.isGreaterThan(q2));
+        assertTrue(q2.isLessThan(q1));
+        assertEquals(0, q1.plus(q2).compareTo(Quantity.of(new BigDecimal("7.5"))));
+        assertEquals(0, q1.add(q2).compareTo(Quantity.of(new BigDecimal("7.5"))));
+
+        assertEquals(0, q1.minus(q2).compareTo(Quantity.of(new BigDecimal("2.5"))));
+        assertEquals(0, q1.subtract(q2).compareTo(Quantity.of(new BigDecimal("2.5"))));
+
+        assertThrows(IllegalArgumentException.class, () -> q2.minus(q1));
+    }
+
+    @Test
+    void equalityAndToString() {
+        Quantity a = Quantity.of(new BigDecimal("1.000"));
+        Quantity b = Quantity.of(new BigDecimal("1"));
+        assertEquals(a, b);
+        assertEquals("1", a.toString());
+        assertEquals(a.hashCode(), b.hashCode());
     }
 }

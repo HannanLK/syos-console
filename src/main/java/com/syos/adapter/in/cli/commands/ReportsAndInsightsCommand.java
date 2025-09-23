@@ -120,18 +120,204 @@ public class ReportsAndInsightsCommand implements Command {
             console.println("\n--- Advanced Retail Insights ---");
             console.println("[1] Inventory Turnover");
             console.println("[2] Peak Shopping Hours");
-            console.println("[3] Product Category Performance");
+            console.println("[3] Product Performance (Top Sellers)");
             console.println("[4] Channel Performance Analysis");
-            console.println("[5] Customer Behavior Analytics");
-            console.println("[6] Cross-Channel Insights");
-            console.println("[7] Inventory Efficiency");
-            console.println("[8] Seasonal Trends");
+            console.println("[5] Customer Behavior Analytics (TBD)");
+            console.println("[6] Cross-Channel Insights (TBD)");
+            console.println("[7] Inventory Efficiency (TBD)");
+            console.println("[8] Seasonal Trends (TBD)");
             console.println("[B] Back");
             String c = readKey();
-            if ("B".equals(c)) return;
-            console.println("\nThis insight will be available once transaction analytics are enabled. (Placeholder)\n");
-            console.readLine("Press Enter to continue...");
+            switch (c) {
+                case "1" -> showInventoryTurnoverInsight();
+                case "2" -> showPeakShoppingHoursInsight();
+                case "3" -> showProductPerformanceInsight();
+                case "4" -> showChannelPerformanceInsight();
+                case "5", "6", "7", "8" -> {
+                    console.println("\nThis insight will be expanded in Phase 3 (Advanced Analytics). For now, please use available reports and insights.\n");
+                    console.readLine("Press Enter to continue...");
+                }
+                case "B" -> { return; }
+                default -> console.printError("Invalid choice.");
+            }
         }
+    }
+
+    // ===== Advanced Insights Implementations =====
+    private void showInventoryTurnoverInsight() {
+        console.println("\nInventory Turnover (Approximate)");
+        try {
+            String daysStr = readOptional("Lookback window in days [default=30]: ");
+            int days = 30;
+            try { if (!daysStr.isBlank()) days = Math.max(1, Integer.parseInt(daysStr.trim())); } catch (Exception ignored) {}
+            java.time.LocalDate endDate = java.time.LocalDate.now();
+            java.time.LocalDate startDate = endDate.minusDays(days - 1);
+
+            // Sum quantity sold over the window (by day using existing daily aggregates)
+            long totalQtySold = 0L;
+            java.util.Map<String, Long> qtyByItem = new java.util.HashMap<>();
+            if (txReportRepo != null) {
+                java.time.LocalDate d = startDate;
+                while (!d.isAfter(endDate)) {
+                    java.util.List<Object[]> rows = txReportRepo.findDailyItemAggregates(d);
+                    for (Object[] r : rows) {
+                        String code = (String) r[0];
+                        long qty = ((Number) r[2]).longValue();
+                        totalQtySold += qty;
+                        qtyByItem.merge(code, qty, Long::sum);
+                    }
+                    d = d.plusDays(1);
+                }
+            }
+
+            // Use current inventory snapshot as denominator (approximation)
+            java.math.BigDecimal currentInventory = sumWarehouse().add(sumShelf()).add(sumWeb());
+            java.math.BigDecimal turnover = currentInventory.compareTo(java.math.BigDecimal.ZERO) == 0
+                    ? java.math.BigDecimal.ZERO
+                    : new java.math.BigDecimal(totalQtySold).divide(currentInventory, java.math.MathContext.DECIMAL64);
+
+            console.println(String.format("Window: %s to %s", startDate, endDate));
+            console.println(String.format("Total Qty Sold: %d", totalQtySold));
+            console.println(String.format("Current Inventory (All Pools): %s", currentInventory.toPlainString()));
+            console.println(String.format("Turnover Ratio (Qty Sold / Current Qty): %s", turnover.toPlainString()));
+
+            // Top 10 fastest-moving items by quantity sold
+            if (!qtyByItem.isEmpty()) {
+                console.println("\nTop Moving Items (by quantity sold)");
+                console.println(String.format("%-14s %-28s %-8s", "Item Code", "Item Name", "Qty"));
+                qtyByItem.entrySet().stream()
+                        .sorted((a, b) -> Long.compare(b.getValue(), a.getValue()))
+                        .limit(10)
+                        .forEach(e -> {
+                            String code = e.getKey();
+                            String name = lookupName(new com.syos.domain.valueobjects.ItemCode(code));
+                            console.println(String.format("%-14s %-28s %-8d", code, truncate(name, 28), e.getValue()));
+                        });
+            } else {
+                console.println("No sales found in the selected window.");
+            }
+        } catch (Exception ex) {
+            console.printError("Failed to compute inventory turnover: " + ex.getMessage());
+        }
+        console.readLine("\nPress Enter to continue...");
+    }
+
+    private void showPeakShoppingHoursInsight() {
+        console.println("\nPeak Shopping Hours");
+        try {
+            String s = readOptional("Start date (yyyy-MM-dd) [default=today]: ");
+            String e = readOptional("End date (yyyy-MM-dd) [default=+1 day]: ");
+            java.time.LocalDate sd = parseDate(s);
+            if (sd == null) sd = java.time.LocalDate.now();
+            java.time.LocalDate ed = parseDate(e);
+            if (ed == null) ed = sd.plusDays(1);
+            java.time.LocalDateTime start = sd.atStartOfDay();
+            java.time.LocalDateTime end = ed.atStartOfDay();
+
+            int[] counts = new int[24];
+            if (billReportRepo != null) {
+                java.util.List<Object[]> rows = billReportRepo.listBillsBetween(start, end);
+                for (Object[] r : rows) {
+                    java.time.LocalDateTime when = (java.time.LocalDateTime) r[1];
+                    int hour = when.getHour();
+                    counts[hour]++;
+                }
+            }
+            int total = java.util.Arrays.stream(counts).sum();
+            if (total == 0) {
+                console.println("No transactions in the selected range.");
+            } else {
+                console.println(String.format("Range: %s to %s", sd, ed.minusDays(1)));
+                console.println(String.format("%-6s %-8s %-10s", "Hour", "Count", "Share"));
+                for (int h = 0; h < 24; h++) {
+                    int c = counts[h];
+                    double share = total == 0 ? 0.0 : (c * 100.0 / total);
+                    console.println(String.format("%02d:00  %-8d %5.1f%%", h, c, share));
+                }
+                int peakHour = 0; int peak = 0;
+                for (int h = 0; h < 24; h++) { if (counts[h] > peak) { peak = counts[h]; peakHour = h; } }
+                console.println(String.format("\nPeak Hour: %02d:00 with %d transactions", peakHour, peak));
+            }
+        } catch (Exception ex) {
+            console.printError("Failed to compute peak shopping hours: " + ex.getMessage());
+        }
+        console.readLine("\nPress Enter to continue...");
+    }
+
+    private void showChannelPerformanceInsight() {
+        console.println("\nChannel Performance Analysis");
+        try {
+            String s = readOptional("Start date (yyyy-MM-dd) [default=today]: ");
+            String e = readOptional("End date (yyyy-MM-dd) [default=+1 day]: ");
+            java.time.LocalDate startDate = parseDate(s);
+            if (startDate == null) startDate = java.time.LocalDate.now();
+            java.time.LocalDate endDate = parseDate(e);
+            if (endDate == null) endDate = startDate.plusDays(1);
+            java.time.LocalDateTime start = startDate.atStartOfDay();
+            java.time.LocalDateTime end = endDate.atStartOfDay();
+            java.util.List<Object[]> rows = (txReportRepo != null) ? txReportRepo.findChannelSummary(start, end) : java.util.Collections.emptyList();
+            if (rows.isEmpty()) {
+                console.println("No transactions found for the selected range.");
+            } else {
+                console.println(String.format("Range: %s to %s", startDate, endDate.minusDays(1)));
+                console.println(String.format("%-8s %-10s %-14s %-14s", "Channel", "Count", "Total(LKR)", "Avg Order"));
+                long totalCount = 0;
+                java.math.BigDecimal grandTotal = java.math.BigDecimal.ZERO;
+                for (Object[] r : rows) {
+                    String channel = (String) r[0];
+                    long count = ((Number) r[1]).longValue();
+                    java.math.BigDecimal sum = (java.math.BigDecimal) r[2];
+                    java.math.BigDecimal avg = (java.math.BigDecimal) r[3];
+                    totalCount += count;
+                    grandTotal = grandTotal.add(sum);
+                    console.println(String.format("%-8s %-10d %-14s %-14s", channel, count, sum.toPlainString(), avg.toPlainString()));
+                }
+                console.println(String.format("%-8s %-10d %-14s", "TOTAL", totalCount, grandTotal.toPlainString()));
+            }
+        } catch (Exception ex) {
+            console.printError("Failed to build channel performance insight: " + ex.getMessage());
+        }
+        console.readLine("\nPress Enter to continue...");
+    }
+
+    private void showProductPerformanceInsight() {
+        console.println("\nProduct Performance (Top Sellers in Window)");
+        try {
+            String daysStr = readOptional("Lookback window in days [default=7]: ");
+            int days = 7; try { if (!daysStr.isBlank()) days = Math.max(1, Integer.parseInt(daysStr.trim())); } catch (Exception ignored) {}
+            java.time.LocalDate endDate = java.time.LocalDate.now();
+            java.time.LocalDate startDate = endDate.minusDays(days - 1);
+            java.util.Map<String, Long> qtyByItem = new java.util.HashMap<>();
+            if (txReportRepo != null) {
+                java.time.LocalDate d = startDate;
+                while (!d.isAfter(endDate)) {
+                    java.util.List<Object[]> rows = txReportRepo.findDailyItemAggregates(d);
+                    for (Object[] r : rows) {
+                        String code = (String) r[0];
+                        long qty = ((Number) r[2]).longValue();
+                        qtyByItem.merge(code, qty, Long::sum);
+                    }
+                    d = d.plusDays(1);
+                }
+            }
+            if (qtyByItem.isEmpty()) {
+                console.println("No sales found in the selected window.");
+            } else {
+                console.println(String.format("Window: %s to %s", startDate, endDate));
+                console.println(String.format("%-14s %-28s %-8s", "Item Code", "Item Name", "Qty"));
+                qtyByItem.entrySet().stream()
+                        .sorted((a, b) -> Long.compare(b.getValue(), a.getValue()))
+                        .limit(15)
+                        .forEach(e -> {
+                            String code = e.getKey();
+                            String name = lookupName(new com.syos.domain.valueobjects.ItemCode(code));
+                            console.println(String.format("%-14s %-28s %-8d", code, truncate(name, 28), e.getValue()));
+                        });
+            }
+        } catch (Exception ex) {
+            console.printError("Failed to build product performance insight: " + ex.getMessage());
+        }
+        console.readLine("\nPress Enter to continue...");
     }
 
     // ========== Report Implementations (Minimal Viable) ==========

@@ -190,9 +190,11 @@ public class WebInventory {
      * Check if item is expiring soon (within 5 days for web inventory)
      */
     public boolean isExpiringSoon() {
-        return expiryDate != null && 
-               LocalDateTime.now().plusDays(5).isAfter(expiryDate) && 
-               !isExpired();
+        // Consider items expiring within the next 5 days as "expiring soon" (inclusive of the 5th day)
+        // i.e., expiry <= now + 5 days and not already expired
+        return expiryDate != null &&
+               !isExpired() &&
+               !expiryDate.isAfter(LocalDateTime.now().plusDays(5));
     }
 
     /**

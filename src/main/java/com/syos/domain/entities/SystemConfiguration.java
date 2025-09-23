@@ -18,6 +18,8 @@ import java.util.Objects;
 @Getter
 @AllArgsConstructor
 public class SystemConfiguration {
+    // Explicit boolean getter to avoid Lombok corner-cases with 'is' prefix
+    public boolean isActive() { return this.isActive; }
     private Long configurationId;
     private String configurationKey;
     private SynexPointsConfiguration pointsConfiguration;
@@ -104,12 +106,13 @@ public class SystemConfiguration {
      */
     public String getConfigurationSummary() {
         if (pointsConfiguration != null) {
+            String status = this.isActive ? "active" : "inactive";
             return String.format(
-                "Synex Points Configuration: Rate=%s, Min Threshold=%.2f LKR, Max Points=%.2f, Active=%s",
+                "SynexPointsConfiguration [%s]: Rate=%s, MinThreshold=%s LKR, MaxPoints=%s",
+                status,
                 pointsConfiguration.getPointsRateAsPercentage(),
-                pointsConfiguration.getMinimumSpendingThreshold(),
-                pointsConfiguration.getMaximumPointsPerTransaction(),
-                pointsConfiguration.isActive()
+                pointsConfiguration.getMinimumSpendingThreshold().toPlainString(),
+                pointsConfiguration.getMaximumPointsPerTransaction().toPlainString()
             );
         }
         return "No points configuration available";
@@ -135,12 +138,13 @@ public class SystemConfiguration {
         if (o == null || getClass() != o.getClass()) return false;
         SystemConfiguration that = (SystemConfiguration) o;
         return Objects.equals(configurationId, that.configurationId) &&
-               Objects.equals(configurationKey, that.configurationKey);
+               Objects.equals(configurationKey, that.configurationKey) &&
+               Objects.equals(pointsConfiguration, that.pointsConfiguration);
     }
     
     @Override
     public int hashCode() {
-        return Objects.hash(configurationId, configurationKey);
+        return Objects.hash(configurationId, configurationKey, pointsConfiguration);
     }
     
     /**

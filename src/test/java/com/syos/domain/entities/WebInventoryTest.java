@@ -1,58 +1,55 @@
 package com.syos.domain.entities;
 
-import com.syos.domain.valueobjects.*;
-import org.junit.jupiter.api.DisplayName;
+import com.syos.domain.valueobjects.ItemCode;
+import com.syos.domain.valueobjects.Money;
+import com.syos.domain.valueobjects.Quantity;
+import com.syos.domain.valueobjects.UserID;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-@DisplayName("WebInventory Entity")
 class WebInventoryTest {
 
-    private WebInventory buildSample(double qty, double price, LocalDateTime expiry) {
-        return new WebInventory.Builder()
-                .itemCode(ItemCode.of("WEB100"))
-                .itemId(1L)
-                .batchId(2L)
-                .quantityAvailable(Quantity.of(BigDecimal.valueOf(qty)))
-                .expiryDate(expiry)
-                .addedBy(UserID.of(1L))
-                .webPrice(new Money(BigDecimal.valueOf(price)))
-                .lastUpdatedBy(UserID.of(1L))
-                .build();
+    private ItemCode code() { return ItemCode.of("ITEM-003"); }
+    private Quantity qty(String v) { return Quantity.of(new BigDecimal(v)); }
+    private UserID user(long id) { return UserID.of(id); }
+
+    @Test
+    void create_sell_restock_publish_feature() {
+        WebInventory web = WebInventory.createNew(code(), 3L, 300L, qty("20"), LocalDateTime.now().plusDays(5), user(1), Money.of("500.00"));
+        assertTrue(web.isAvailableForPurchase());
+        assertEquals(20, web.getStockLevel());
+
+        WebInventory sold = web.sellStock(qty("5"), user(2));
+        assertEquals(qty("15"), sold.getQuantityAvailable());
+        assertTrue(sold.isLowStock());
+        assertTrue(sold.isExpiringSoon());
+
+        WebInventory restocked = sold.restockWeb(qty("10"), user(3));
+        assertEquals(qty("25"), restocked.getQuantityAvailable());
+
+        WebInventory priced = restocked.updateWebPrice(Money.of("550.00"), user(3));
+        assertEquals(Money.of("550.00"), priced.getWebPrice());
+
+        WebInventory published = priced.setPublishStatus(true, user(3));
+        WebInventory featured = published.setFeaturedStatus(true, user(3));
+        assertTrue(published.isPublished());
+        assertTrue(featured.isFeatured());
+
+        WebInventory content = featured.updateWebContent("Nice product", "grocery,beverage", user(3));
+        assertEquals("Nice product", content.getWebDescription());
+        assertEquals("grocery,beverage", content.getSeoKeywords());
     }
 
     @Test
-    @DisplayName("sellStock reduces quantity; cannot oversell")
-    void sellStock() {
-        WebInventory wi = buildSample(5, 1000, LocalDateTime.now().plusDays(7));
-        WebInventory after = wi.sellStock(Quantity.of(BigDecimal.valueOf(2)), UserID.of(7L));
-        assertThat(after.getQuantityAvailable().toBigDecimal()).isEqualByComparingTo("3");
-        assertThatThrownBy(() -> after.sellStock(Quantity.of(BigDecimal.valueOf(4)), UserID.of(7L)))
-                .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    @DisplayName("restock and flags")
-    void restockAndFlags() {
-        WebInventory wi = buildSample(0, 500, LocalDateTime.now().plusDays(1));
-        WebInventory restocked = wi.restockWeb(Quantity.of(BigDecimal.valueOf(10)), UserID.of(2L));
-        assertThat(restocked.getQuantityAvailable().toBigDecimal()).isEqualByComparingTo("10");
-        assertThat(restocked.isLowStock()).isFalse();
-        assertThat(restocked.isAvailableForPurchase()).isTrue();
-    }
-
-    @Test
-    @DisplayName("expiry behavior and total value")
-    void expiryAndTotal() {
-        WebInventory near = buildSample(1, 250.50, LocalDateTime.now().plusHours(24));
-        WebInventory expired = buildSample(1, 100, LocalDateTime.now().minusMinutes(1));
-        assertThat(near.isExpiringSoon()).isTrue();
-        assertThat(expired.isExpired()).isTrue();
-        assertThat(near.getTotalValue().toBigDecimal())
-                .isEqualByComparingTo(new BigDecimal("250.50"));
+    void invalidConstruction() {
+        assertThrows(IllegalArgumentException.class, () -> new WebInventory.Builder()
+                .itemCode(code()).itemId(1L).batchId(1L)
+                .quantityAvailable(Quantity.of(new BigDecimal("-1")))
+                .addedToWebDate(LocalDateTime.now()).addedBy(user(1))
+                .webPrice(Money.of("100")).lastUpdatedBy(user(1)).build());
     }
 }

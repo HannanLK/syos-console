@@ -2,41 +2,28 @@ package com.syos.domain.entities;
 
 import com.syos.domain.valueobjects.ItemCode;
 import com.syos.domain.valueobjects.Money;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
+import static org.junit.jupiter.api.Assertions.*;
 
-import static org.assertj.core.api.Assertions.*;
-
-@DisplayName("Item Entity")
 class ItemTest {
 
     @Test
-    @DisplayName("create with valid prices and perishable flag")
-    void createValid() {
-        Item item = Item.create(
-                ItemCode.of("ITM777"),
-                "Sugar 1kg",
-                Money.of(new BigDecimal("200.00")),
-                Money.of(new BigDecimal("250.00")),
-                true,
-                50
-        );
-        assertThat(item.getCode().getValue()).isEqualTo("ITM777");
-        assertThat(item.getSellingPrice().isGreaterThan(item.getCostPrice())).isTrue();
-    }
+    void create_andValidations() {
+        Item item = Item.create(ItemCode.of("PRD-001"), "  Cola  ", Money.of("100.00"), Money.of("120.00"), true, 50);
+        assertEquals("Cola", item.getName());
+        assertEquals(ItemCode.of("PRD-001"), item.getCode());
+        assertEquals(Money.of("100.00"), item.getCostPrice());
+        assertEquals(Money.of("120.00"), item.getSellingPrice());
+        assertTrue(item.isPerishable());
+        assertEquals(50, item.getReorderPoint());
 
-    @Test
-    @DisplayName("selling price must be >= cost price")
-    void invalidPrices() {
-        assertThatThrownBy(() -> Item.create(
-                ItemCode.of("ITM888"),
-                "Oil 1L",
-                Money.of(new BigDecimal("500.00")),
-                Money.of(new BigDecimal("499.99")),
-                false,
-                10
-        )).isInstanceOf(IllegalArgumentException.class);
+        Item withId = item.withId(10L);
+        assertEquals(10L, withId.getId());
+        assertNull(item.getId());
+
+        // Invalid cases
+        assertThrows(IllegalArgumentException.class, () -> Item.create(ItemCode.of("PRD-002"), " ", Money.of("10.00"), Money.of("12.00"), false, 0));
+        assertThrows(IllegalArgumentException.class, () -> Item.create(ItemCode.of("PRD-003"), "X", Money.of("10.00"), Money.of("9.99"), false, 0));
     }
 }

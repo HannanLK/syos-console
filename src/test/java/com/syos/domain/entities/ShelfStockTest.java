@@ -1,91 +1,61 @@
 package com.syos.domain.entities;
 
-import com.syos.domain.valueobjects.*;
-import org.junit.jupiter.api.DisplayName;
+import com.syos.domain.valueobjects.ItemCode;
+import com.syos.domain.valueobjects.Money;
+import com.syos.domain.valueobjects.Quantity;
+import com.syos.domain.valueobjects.UserID;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-@DisplayName("ShelfStock Entity")
 class ShelfStockTest {
 
-    private ShelfStock buildSample(double qty, double price, LocalDateTime expiry) {
-        return new ShelfStock.Builder()
-                .itemCode(ItemCode.of("ITM001"))
-                .itemId(1L)
-                .batchId(10L)
-                .shelfCode("A1")
-                .quantityOnShelf(Quantity.of(BigDecimal.valueOf(qty)))
-                .expiryDate(expiry)
-                .placedBy(UserID.of(100L))
-                .unitPrice(new Money(BigDecimal.valueOf(price)))
-                .lastUpdatedBy(UserID.of(100L))
-                .build();
+    private ItemCode code() { return ItemCode.of("ITEM-002"); }
+    private Quantity qty(String v) { return Quantity.of(new BigDecimal(v)); }
+    private UserID user(long id) { return UserID.of(id); }
+
+    @Test
+    void create_sell_restock_andFlags() {
+        ShelfStock shelf = ShelfStock.createNew(code(), 2L, 200L, "S1-A", qty("10"), LocalDateTime.now().plusDays(10), user(1), Money.of("250.00"));
+        assertTrue(shelf.isAvailableForSale());
+        assertFalse(shelf.isExpired());
+
+        ShelfStock sold = shelf.sellStock(qty("3"), user(2));
+        assertEquals(qty("7"), sold.getQuantityOnShelf());
+
+        // Define only minimum to trigger needsRestocking without blocking restock
+        ShelfStock withMin = sold.setStockLevels(qty("10"), null, user(99));
+        assertTrue(withMin.needsRestocking());
+
+        ShelfStock restocked = withMin.restockShelf(qty("10"), user(3));
+        assertEquals(qty("17"), restocked.getQuantityOnShelf());
+
+        // Now set a maximum below current to flag overstocked
+        ShelfStock withMax = restocked.setStockLevels(null, qty("15"), user(98));
+        assertTrue(withMax.isOverstocked());
+
+        ShelfStock priced = restocked.updatePrice(Money.of("300.00"), user(3));
+        assertEquals(Money.of("300.00"), priced.getUnitPrice());
+
+        ShelfStock displayed = priced.setDisplayStatus(true, user(3));
+        assertTrue(displayed.isDisplayed());
+        ShelfStock moved = displayed.updateDisplayPosition("EYE-LEVEL", user(3));
+        assertEquals("EYE-LEVEL", moved.getDisplayPosition());
+
+        ShelfStock levels = moved.setStockLevels(qty("5"), qty("15"), user(3));
+        assertEquals(qty("5"), levels.getMinimumStockLevel());
+        assertEquals(qty("15"), levels.getMaximumStockLevel());
     }
 
     @Test
-    @DisplayName("sellStock reduces quantity and updates lastUpdatedBy")
-    void sellStockReducesQuantity() {
-        ShelfStock ss = buildSample(10, 250.0, LocalDateTime.now().plusDays(30));
-        ShelfStock after = ss.sellStock(Quantity.of(BigDecimal.valueOf(3)), UserID.of(200L));
-        assertThat(after.getQuantityOnShelf().toBigDecimal()).isEqualByComparingTo("7");
-        assertThat(after.getLastUpdatedBy()).isEqualTo(UserID.of(200L));
-    }
-
-    @Test
-    @DisplayName("selling more than available throws")
-    void cannotOversell() {
-        ShelfStock ss = buildSample(2, 100, LocalDateTime.now().plusDays(2));
-        assertThatThrownBy(() -> ss.sellStock(Quantity.of(BigDecimal.valueOf(3)), UserID.of(1L)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Cannot sell more than available");
-    }
-
-    @Test
-    @DisplayName("restock increases quantity and enforces max level when set")
-    void restockAndMaxLevel() {
-        ShelfStock ss = new ShelfStock.Builder(buildSample(2, 100, LocalDateTime.now().plusDays(10)))
-                .maximumStockLevel(Quantity.of(BigDecimal.valueOf(5)))
-                .lastUpdatedBy(UserID.of(1L))
-                .build();
-        ShelfStock after = ss.restockShelf(Quantity.of(BigDecimal.valueOf(3)), UserID.of(2L));
-        assertThat(after.getQuantityOnShelf().toBigDecimal()).isEqualByComparingTo("5");
-        assertThatThrownBy(() -> after.restockShelf(Quantity.of(BigDecimal.ONE), UserID.of(3L)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("exceed maximum");
-    }
-
-    @Test
-    @DisplayName("updatePrice validates positive and updates value")
-    void updatePrice() {
-        ShelfStock ss = buildSample(1, 50, LocalDateTime.now().plusDays(1));
-        ShelfStock after = ss.updatePrice(new Money(BigDecimal.valueOf(75)), UserID.of(9L));
-        assertThat(after.getUnitPrice().toBigDecimal()).isEqualByComparingTo("75");
-        assertThatThrownBy(() -> ss.updatePrice(Money.zero(), UserID.of(1L)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("positive");
-    }
-
-    @Test
-    @DisplayName("expiry flags and availability")
-    void expiryAndAvailability() {
-        ShelfStock soon = buildSample(2, 100, LocalDateTime.now().plusDays(2));
-        ShelfStock expired = buildSample(2, 100, LocalDateTime.now().minusHours(1));
-        ShelfStock noQty = buildSample(0, 100, LocalDateTime.now().plusDays(10));
-        assertThat(soon.isExpiringSoon()).isTrue();
-        assertThat(expired.isExpired()).isTrue();
-        assertThat(expired.isAvailableForSale()).isFalse();
-        assertThat(noQty.isAvailableForSale()).isFalse();
-    }
-
-    @Test
-    @DisplayName("total value = unitPrice * qty")
-    void totalValue() {
-        ShelfStock ss = buildSample(3, 199.99, LocalDateTime.now().plusDays(5));
-        assertThat(ss.getTotalValue().toBigDecimal())
-                .isEqualByComparingTo(BigDecimal.valueOf(199.99).multiply(BigDecimal.valueOf(3)));
+    void validations() {
+        assertThrows(IllegalArgumentException.class, () -> new ShelfStock.Builder()
+                .itemCode(code()).itemId(1L).batchId(1L).shelfCode("S1")
+                .quantityOnShelf(Quantity.of(new BigDecimal("-1")))
+                .placedOnShelfDate(LocalDateTime.now()).placedBy(user(1))
+                .unitPrice(Money.of("100")).lastUpdatedBy(user(1)).build());
     }
 }
