@@ -166,45 +166,58 @@ public class CompleteProductManagementUseCase {
         logger.info("Transferring {} units of {} to shelf {}", quantity, itemCode, shelfCode);
         
         try {
-            // Find available warehouse stock
+            // Find available warehouse stock (FIFO by received date)
             var availableStock = warehouseStockRepository.findAvailableByItemCode(ItemCode.of(itemCode));
             if (availableStock.isEmpty()) {
                 return ProductResponse.failure("No available warehouse stock for item: " + itemCode);
             }
-            
-            // Use FIFO strategy to select stock
-            WarehouseStock stockToTransfer = availableStock.get(0);
-            Quantity transferQuantity = Quantity.of(java.math.BigDecimal.valueOf(quantity));
-            
-            if (transferQuantity.isGreaterThan(stockToTransfer.getQuantityAvailable())) {
-                return ProductResponse.failure("Insufficient warehouse stock. Available: " + 
-                    stockToTransfer.getQuantityAvailable().getValue());
+
+            java.math.BigDecimal requested = java.math.BigDecimal.valueOf(quantity);
+            java.math.BigDecimal totalAvailable = availableStock.stream()
+                    .map(ws -> ws.getQuantityAvailable().getValue())
+                    .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+            if (totalAvailable.compareTo(requested) < 0) {
+                return ProductResponse.failure("Insufficient warehouse stock. Available: " + totalAvailable);
             }
-            
-            // Update warehouse stock
-            WarehouseStock updatedWarehouseStock = stockToTransfer.transfer(transferQuantity, currentUser);
-            warehouseStockRepository.save(updatedWarehouseStock);
-            
-            // Create shelf stock
-            ShelfStock shelfStock = ShelfStock.createNew(
-                stockToTransfer.getItemCode(),
-                stockToTransfer.getItemId(),
-                stockToTransfer.getBatchId(),
-                shelfCode,
-                transferQuantity,
-                stockToTransfer.getExpiryDate(),
-                currentUser,
-                getItemSellingPrice(stockToTransfer.getItemId())
-            );
-            shelfStockRepository.save(shelfStock);
-            
+
+            // Allocate across multiple warehouse entries using FIFO
+            java.math.BigDecimal remaining = requested;
+            for (WarehouseStock stock : availableStock) {
+                if (remaining.compareTo(java.math.BigDecimal.ZERO) <= 0) break;
+                java.math.BigDecimal avail = stock.getQuantityAvailable().getValue();
+                if (avail.compareTo(java.math.BigDecimal.ZERO) <= 0) continue;
+
+                java.math.BigDecimal take = remaining.min(avail);
+
+                // Update warehouse stock per batch
+                WarehouseStock updatedWarehouseStock = stock.transfer(Quantity.of(take), currentUser);
+                warehouseStockRepository.save(updatedWarehouseStock);
+
+                // Create matching shelf stock entry per batch moved
+                ShelfStock shelfStock = ShelfStock.createNew(
+                        stock.getItemCode(),
+                        stock.getItemId(),
+                        stock.getBatchId(),
+                        shelfCode,
+                        Quantity.of(take),
+                        stock.getExpiryDate(),
+                        currentUser,
+                        getItemSellingPrice(stock.getItemId())
+                );
+                shelfStockRepository.save(shelfStock);
+
+                remaining = remaining.subtract(take);
+            }
+
             logger.info("Successfully transferred {} units to shelf {}", quantity, shelfCode);
-            
+
+            // Use first stock's itemId for response consistency
+            Long itemId = availableStock.get(0).getItemId();
             return ProductResponse.success(
-                stockToTransfer.getItemId(),
-                "Stock transferred to shelf successfully",
-                itemCode,
-                "Quantity: " + quantity + " to shelf: " + shelfCode
+                    itemId,
+                    "Stock transferred to shelf successfully",
+                    itemCode,
+                    "Quantity: " + quantity + " to shelf: " + shelfCode
             );
             
         } catch (Exception e) {
@@ -220,40 +233,53 @@ public class CompleteProductManagementUseCase {
         logger.info("Transferring {} units of {} to web inventory", quantity, itemCode);
         
         try {
-            // Similar logic to transferToShelf but for web inventory
+            // Find available warehouse stock (FIFO by received date)
             var availableStock = warehouseStockRepository.findAvailableByItemCode(ItemCode.of(itemCode));
             if (availableStock.isEmpty()) {
                 return ProductResponse.failure("No available warehouse stock for item: " + itemCode);
             }
-            
-            WarehouseStock stockToTransfer = availableStock.get(0);
-            Quantity transferQuantity = Quantity.of(java.math.BigDecimal.valueOf(quantity));
-            
-            if (transferQuantity.isGreaterThan(stockToTransfer.getQuantityAvailable())) {
-                return ProductResponse.failure("Insufficient warehouse stock. Available: " + 
-                    stockToTransfer.getQuantityAvailable().getValue());
+
+            java.math.BigDecimal requested = java.math.BigDecimal.valueOf(quantity);
+            java.math.BigDecimal totalAvailable = availableStock.stream()
+                    .map(ws -> ws.getQuantityAvailable().getValue())
+                    .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+            if (totalAvailable.compareTo(requested) < 0) {
+                return ProductResponse.failure("Insufficient warehouse stock. Available: " + totalAvailable);
             }
-            
-            // Update warehouse stock
-            WarehouseStock updatedWarehouseStock = stockToTransfer.transfer(transferQuantity, currentUser);
-            warehouseStockRepository.save(updatedWarehouseStock);
-            
-            // Create web inventory entry and save
-            WebInventory webInventory = WebInventory.createNew(
-                stockToTransfer.getItemCode(),
-                stockToTransfer.getItemId(),
-                stockToTransfer.getBatchId(),
-                transferQuantity,
-                stockToTransfer.getExpiryDate(),
-                currentUser,
-                getItemSellingPrice(stockToTransfer.getItemId())
-            );
-            webInventoryRepository.save(webInventory);
+
+            // Allocate across multiple warehouse entries using FIFO
+            java.math.BigDecimal remaining = requested;
+            for (WarehouseStock stock : availableStock) {
+                if (remaining.compareTo(java.math.BigDecimal.ZERO) <= 0) break;
+                java.math.BigDecimal avail = stock.getQuantityAvailable().getValue();
+                if (avail.compareTo(java.math.BigDecimal.ZERO) <= 0) continue;
+
+                java.math.BigDecimal take = remaining.min(avail);
+
+                // Update warehouse stock per batch
+                WarehouseStock updatedWarehouseStock = stock.transfer(Quantity.of(take), currentUser);
+                warehouseStockRepository.save(updatedWarehouseStock);
+
+                // Create matching web inventory entry per batch moved
+                WebInventory webInventory = WebInventory.createNew(
+                        stock.getItemCode(),
+                        stock.getItemId(),
+                        stock.getBatchId(),
+                        Quantity.of(take),
+                        stock.getExpiryDate(),
+                        currentUser,
+                        getItemSellingPrice(stock.getItemId())
+                );
+                webInventoryRepository.save(webInventory);
+
+                remaining = remaining.subtract(take);
+            }
             
             logger.info("Successfully transferred {} units to web inventory", quantity);
             
+            Long itemId = availableStock.get(0).getItemId();
             return ProductResponse.success(
-                stockToTransfer.getItemId(),
+                itemId,
                 "Stock transferred to web inventory successfully",
                 itemCode,
                 "Quantity: " + quantity + " to web inventory"

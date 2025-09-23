@@ -142,10 +142,10 @@ public class Main {
                     categoryRepository = new JpaCategoryRepository(em);
                     supplierRepository = new JpaSupplierRepository(em);
                     batchRepository = new JpaBatchRepository(emf);
-                    // Use JPA warehouse repository so initial stock persists and is visible in Warehouse view
+                    // Use JPA repositories so inventory reflects database state across all channels
                     warehouseStockRepository = new com.syos.infrastructure.persistence.repositories.JpaWarehouseStockRepository(emf);
-                    shelfStockRepository = createInMemoryShelfStockRepository(); // Placeholder
-                    webInventoryRepository = createInMemoryWebInventoryRepository(); // Placeholder
+                    shelfStockRepository = new com.syos.infrastructure.persistence.repositories.JpaShelfStockRepository(emf);
+                    webInventoryRepository = createInMemoryWebInventoryRepository(); // Placeholder for now
                     
                     // Initialize default users and reference data in database
                     DatabaseInitializer initializer = new DatabaseInitializer(userRepository);

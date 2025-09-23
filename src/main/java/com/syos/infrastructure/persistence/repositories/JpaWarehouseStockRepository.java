@@ -118,15 +118,79 @@ public class JpaWarehouseStockRepository implements WarehouseStockRepository {
     public List<WarehouseStock> findAvailableByItemCode(ItemCode itemCode) {
         EntityManager em = emf.createEntityManager();
         try {
-            TypedQuery<WarehouseStockEntity> query = em.createQuery(
-                "SELECT ws FROM WarehouseStockEntity ws WHERE ws.itemCode = :itemCode AND ws.quantityAvailable > 0 ORDER BY ws.receivedDate ASC",
-                WarehouseStockEntity.class
-            );
+            // Use native query to compute availability from canonical columns (quantity - reserved_quantity)
+            // This avoids inconsistencies if quantity_available is not in sync and aligns with pre-listing logic
+            String sql = "SELECT " +
+                    " ws.id AS id, " +
+                    " im.item_code AS item_code, " +
+                    " ws.item_id AS item_id, " +
+                    " ws.batch_id AS batch_id, " +
+                    " ws.quantity AS quantity_received, " +
+                    " (ws.quantity - COALESCE(ws.reserved_quantity, 0)) AS quantity_available, " +
+                    " ws.received_date AS received_date, " +
+                    " b.expiry_date AS expiry_date, " +
+                    " COALESCE(ws.created_by, 0) AS received_by, " +
+                    " COALESCE(l.location_name, 'MAIN-WAREHOUSE') AS location, " +
+                    " false AS is_reserved, " +
+                    " NULL::BIGINT AS reserved_by, " +
+                    " NULL::TIMESTAMP AS reserved_at, " +
+                    " ws.last_updated AS last_updated, " +
+                    " COALESCE(ws.created_by, 0) AS last_updated_by " +
+                    " FROM warehouse_stock ws " +
+                    " JOIN item_master_file im ON im.id = ws.item_id " +
+                    " JOIN batches b ON b.id = ws.batch_id " +
+                    " JOIN locations l ON l.id = ws.location_id " +
+                    " WHERE im.item_code = :itemCode " +
+                    "   AND (ws.quantity - COALESCE(ws.reserved_quantity, 0)) > 0 " +
+                    " ORDER BY ws.received_date ASC";
+
+            jakarta.persistence.Query query = em.createNativeQuery(sql);
             query.setParameter("itemCode", itemCode.getValue());
-            
-            return query.getResultList().stream()
-                    .map(this::toDomain)
-                    .collect(Collectors.toList());
+            @SuppressWarnings("unchecked")
+            java.util.List<Object[]> rows = query.getResultList();
+
+            java.util.List<WarehouseStock> results = new java.util.ArrayList<>();
+            for (Object[] r : rows) {
+                int i = 0;
+                Long id = r[i++] == null ? null : ((Number) r[i-1]).longValue();
+                String code = (String) r[i++];
+                Long itemId = r[i++] == null ? null : ((Number) r[i-1]).longValue();
+                Long batchId = r[i++] == null ? null : ((Number) r[i-1]).longValue();
+                java.math.BigDecimal qtyReceived = (java.math.BigDecimal) r[i++];
+                java.math.BigDecimal qtyAvailable = (java.math.BigDecimal) r[i++];
+                Object receivedObj = r[i++];
+                Object expiryObj = r[i++];
+                Long receivedBy = r[i++] == null ? 0L : ((Number) r[i-1]).longValue();
+                String loc = (String) r[i++];
+                // skip is_reserved, reserved_by, reserved_at
+                i += 3;
+                Object lastUpdatedObj = r[i++];
+                Long lastUpdatedBy = r[i++] == null ? 0L : ((Number) r[i-1]).longValue();
+
+                java.time.LocalDateTime receivedLdt = toLocalDateTimeSafe(receivedObj);
+                java.time.LocalDateTime expiryLdt = toStartOfDaySafe(expiryObj);
+                java.time.LocalDateTime lastUpdatedLdt = toLocalDateTimeSafe(lastUpdatedObj);
+
+                WarehouseStock ws = WarehouseStock.builder()
+                        .id(id)
+                        .itemCode(com.syos.domain.valueobjects.ItemCode.of(code))
+                        .itemId(itemId)
+                        .batchId(batchId)
+                        .quantityReceived(com.syos.domain.valueobjects.Quantity.of(qtyReceived))
+                        .quantityAvailable(com.syos.domain.valueobjects.Quantity.of(qtyAvailable))
+                        .receivedDate(receivedLdt != null ? receivedLdt : java.time.LocalDateTime.now())
+                        .expiryDate(expiryLdt)
+                        .receivedBy(com.syos.domain.valueobjects.UserID.of(receivedBy))
+                        .location(loc)
+                        .isReserved(false)
+                        .reservedBy(null)
+                        .reservedAt(null)
+                        .lastUpdated(lastUpdatedLdt != null ? lastUpdatedLdt : java.time.LocalDateTime.now())
+                        .lastUpdatedBy(com.syos.domain.valueobjects.UserID.of(lastUpdatedBy))
+                        .build();
+                results.add(ws);
+            }
+            return results;
         } finally {
             em.close();
         }

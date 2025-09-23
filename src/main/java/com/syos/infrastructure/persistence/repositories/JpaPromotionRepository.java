@@ -26,9 +26,9 @@ public class JpaPromotionRepository {
     public Optional<PromotionEntity> findActiveBatchPromotionForItemAndBatch(Long itemId, Long batchId, LocalDateTime at) {
         EntityManager em = emf.createEntityManager();
         try {
-            String jpql = "SELECT p FROM PromotionEntities$PromotionEntity p " +
-                    "JOIN PromotionEntities$PromotionItemEntity pi ON pi.id.promotionId = p.id " +
-                    "JOIN PromotionEntities$PromotionBatchEntity pb ON pb.id.promotionId = p.id " +
+            String jpql = "SELECT p FROM PromotionEntity p " +
+                    "JOIN p.items pi " +
+                    "JOIN p.batches pb " +
                     "WHERE pi.id.itemId = :itemId AND pb.id.batchId = :batchId " +
                     "AND p.active = true AND p.batchSpecific = true " +
                     "AND p.startDate <= :at AND p.endDate >= :at";
