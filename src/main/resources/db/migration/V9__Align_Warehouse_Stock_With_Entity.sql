@@ -1,7 +1,7 @@
--- Align warehouse_stock table with WarehouseStockEntity mapping
--- This migration adds missing columns expected by JPA entity and backfills data from existing schema
+-- Align warehouse_stock and related tables with Entity mappings and triggers
+-- This migration adds missing columns expected by JPA entities and DB triggers, and backfills data
 
--- 1) Add columns if not exist
+-- 1) Add missing columns on warehouse_stock (used by BEFORE UPDATE trigger update_updated_at_column)
 ALTER TABLE warehouse_stock
     ADD COLUMN IF NOT EXISTS item_code VARCHAR(50) NOT NULL DEFAULT '',
     ADD COLUMN IF NOT EXISTS quantity_received DECIMAL(12,3) NOT NULL DEFAULT 0,
@@ -12,7 +12,12 @@ ALTER TABLE warehouse_stock
     ADD COLUMN IF NOT EXISTS is_reserved BOOLEAN NOT NULL DEFAULT false,
     ADD COLUMN IF NOT EXISTS reserved_by BIGINT,
     ADD COLUMN IF NOT EXISTS reserved_at TIMESTAMP,
-    ADD COLUMN IF NOT EXISTS last_updated_by BIGINT NOT NULL DEFAULT 0;
+    ADD COLUMN IF NOT EXISTS last_updated_by BIGINT NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;  -- required by trigger
+
+-- 1b) Ensure web_inventory also has updated_at for the same trigger
+ALTER TABLE IF EXISTS web_inventory
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;  -- required by trigger
 
 -- 2) Backfill item_code from item_master_file
 UPDATE warehouse_stock ws

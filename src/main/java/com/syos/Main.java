@@ -33,8 +33,8 @@ import java.nio.file.Paths;
 public class Main {
     // Ensure logging system properties are set BEFORE any logger is initialized
     static {
-        // Set logging configuration explicitly
-        System.setProperty("logging.config", "classpath:logging/logback.xml");
+        // Set logging configuration explicitly (corrected path)
+        System.setProperty("logging.config", "classpath:logback.xml");
         System.setProperty("LOG_HOME", "D:/4th_final/sem1/clean_cod/syos/syos-console/logs");
         // Set environment-based console logging
         String environment = System.getProperty("APP_ENV", "production");
@@ -54,6 +54,11 @@ public class Main {
         }
     }
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
+    // Specialized loggers for dedicated files
+    private static final Logger auditLogger = LoggerFactory.getLogger("audit");
+    private static final Logger performanceLogger = LoggerFactory.getLogger("performance");
+    private static final Logger transactionLogger = LoggerFactory.getLogger("transaction");
+    private static final Logger sqlLogger = LoggerFactory.getLogger("sql");
     private static final boolean USE_DATABASE = true; // Set to false for in-memory mode
 
     // Repository fields
@@ -68,8 +73,8 @@ public class Main {
     private static WebInventoryRepository webInventoryRepository = null;
 
     public static void main(String[] args) {
-        // Set logging configuration explicitly
-        System.setProperty("logging.config", "classpath:logging/logback.xml");
+        // Set logging configuration explicitly (corrected path)
+        System.setProperty("logging.config", "classpath:logback.xml");
         System.setProperty("LOG_HOME", "D:/4th_final/sem1/clean_cod/syos/syos-console/logs");
         
         // Determine environment from system property or default to production
@@ -101,6 +106,12 @@ public class Main {
         } catch (Exception ex) {
             logger.warn("Could not ensure log directory exists", ex);
         }
+        
+        // Emit one-time initialization messages to ensure specialized log files are created
+        auditLogger.info("Application startup - audit logger initialized");
+        performanceLogger.info("Application startup - performance logger initialized");
+        transactionLogger.info("Application startup - transaction logger initialized");
+        sqlLogger.debug("Application startup - SQL logger initialized");
         
         EntityManagerFactory emf = null;
         
