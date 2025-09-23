@@ -12,7 +12,9 @@
     <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V5__Create_Batch_And_Stock_Tables.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
     <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V6__Create_FIFO_Functions_And_Procedures.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
     <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V7__Create_Transactions_And_Reports.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V8__Add_Promotion_Batches_And_Flags.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
     <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V8__Alter_Batches_Add_Cost_Per_Unit.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V9__Align_Warehouse_Stock_With_Entity.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
     <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V9__Update_Transaction_Entities_For_JPA.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
     <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/database-setup.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
   </component>

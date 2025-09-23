@@ -131,7 +131,8 @@ public class RegisterCommand implements Command {
         console.println("\n═════════════════════════════════════════");
         console.println("             USER PROFILE                ");
         console.println("═════════════════════════════════════════");
-        console.println(greeting + ", " + padRight(user.getName().getValue() + "!", 32 - greeting.length()));
+        int nameWidth = Math.max(0, 32 - greeting.length() - 3);
+        console.println(" " + greeting + ", " + padRight(user.getName().getValue() + "!", nameWidth));
         console.println();
         console.println("  Username: " + padRight(user.getUsername().getValue(), 25));
         console.println("  Email: " + padRight(user.getEmail().getValue(), 28));

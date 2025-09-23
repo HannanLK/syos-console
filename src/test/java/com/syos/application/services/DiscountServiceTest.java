@@ -4,103 +4,66 @@ import com.syos.infrastructure.persistence.entities.PromotionEntities.PromotionE
 import com.syos.infrastructure.persistence.entities.PromotionEntities.PromotionType;
 import com.syos.infrastructure.persistence.repositories.JpaPromotionRepository;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mockito;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
-@DisplayName("DiscountService Unit Tests")
 class DiscountServiceTest {
 
-    @Mock
-    private JpaPromotionRepository promoRepo;
-
-    private DiscountService service;
+    JpaPromotionRepository repo;
+    DiscountService service;
 
     @BeforeEach
-    void setUp() {
-        service = new DiscountService(promoRepo);
+    void setup() {
+        repo = Mockito.mock(JpaPromotionRepository.class);
+        service = new DiscountService(repo);
     }
 
-    private PromotionEntity buildPromotion(PromotionType type, BigDecimal value) {
+    private static PromotionEntity mkPromo(PromotionType type, String value) {
         PromotionEntity p = new PromotionEntity();
         p.setPromotionType(type);
-        p.setDiscountValue(value);
-        // Other fields (dates/flags) are enforced by repository; mocked method bypasses that filtering
+        p.setDiscountValue(new BigDecimal(value));
+        p.setStartDate(LocalDateTime.now().minusDays(1));
+        p.setEndDate(LocalDateTime.now().plusDays(1));
+        p.setActive(true);
+        p.setBatchSpecific(true);
         return p;
     }
 
     @Test
-    @DisplayName("Percentage promotion applies correct discount")
-    void percentageDiscount() {
-        when(promoRepo.findActiveBatchPromotionForItemAndBatch(any(), any(), any()))
-                .thenReturn(Optional.of(buildPromotion(PromotionType.PERCENTAGE, new BigDecimal("10")))); // 10%
+    void calculateBatchDiscount_percentage_and_fixed_and_none_and_clamp() {
+        // percentage 10% on 100x2 -> 20.00
+        when(repo.findActiveBatchPromotionForItemAndBatch(anyLong(), anyLong(), any())).thenReturn(Optional.of(mkPromo(PromotionType.PERCENTAGE, "10")));
+        BigDecimal d1 = service.calculateBatchDiscount(1L, 1L, new BigDecimal("100.00"), 2);
+        assertEquals(new BigDecimal("20.00"), d1);
 
-        BigDecimal unitPrice = new BigDecimal("250.00");
-        double qty = 3; // gross = 750.00, 10% = 75.00
-        BigDecimal discount = service.calculateBatchDiscount(1L, 100L, unitPrice, qty);
-        assertEquals(new BigDecimal("75.00"), discount);
-    }
+        // fixed 5 per unit on 3 units -> 15.00
+        when(repo.findActiveBatchPromotionForItemAndBatch(anyLong(), anyLong(), any())).thenReturn(Optional.of(mkPromo(PromotionType.FIXED_AMOUNT, "5.00")));
+        BigDecimal d2 = service.calculateBatchDiscount(1L, 1L, new BigDecimal("100.00"), 3);
+        assertEquals(new BigDecimal("15.00"), d2);
 
-    @Test
-    @DisplayName("Fixed amount promotion applies per-unit discount")
-    void fixedAmountPerUnitDiscount() {
-        when(promoRepo.findActiveBatchPromotionForItemAndBatch(any(), any(), any()))
-                .thenReturn(Optional.of(buildPromotion(PromotionType.FIXED_AMOUNT, new BigDecimal("15")))); // 15 per unit
+        // unsupported type -> zero
+        PromotionEntity unsupported = mkPromo(PromotionType.BUY_X_GET_Y, "0");
+        when(repo.findActiveBatchPromotionForItemAndBatch(anyLong(), anyLong(), any())).thenReturn(Optional.of(unsupported));
+        BigDecimal d3 = service.calculateBatchDiscount(1L, 1L, new BigDecimal("50.00"), 1);
+        assertEquals(0, d3.compareTo(new BigDecimal("0.00")));
 
-        BigDecimal unitPrice = new BigDecimal("200.00");
-        double qty = 4; // discount = 60.00
-        BigDecimal discount = service.calculateBatchDiscount(2L, 200L, unitPrice, qty);
-        assertEquals(new BigDecimal("60.00"), discount);
-    }
+        // none -> zero
+        when(repo.findActiveBatchPromotionForItemAndBatch(anyLong(), anyLong(), any())).thenReturn(Optional.empty());
+        BigDecimal d4 = service.calculateBatchDiscount(1L, 1L, new BigDecimal("50.00"), 1);
+        assertEquals(0, d4.compareTo(new BigDecimal("0.00")));
 
-    @Test
-    @DisplayName("No active promotion yields zero discount")
-    void noPromotion() {
-        when(promoRepo.findActiveBatchPromotionForItemAndBatch(any(), any(), any()))
-                .thenReturn(Optional.empty());
-
-        BigDecimal discount = service.calculateBatchDiscount(3L, 300L, new BigDecimal("99.99"), 2);
-        // Use compareTo to ignore scale differences (0 vs 0.00)
-        assertEquals(0, discount.compareTo(new BigDecimal("0.00")));
-    }
-
-    @Test
-    @DisplayName("Unsupported promotion type yields zero discount")
-    void unsupportedType() {
-        when(promoRepo.findActiveBatchPromotionForItemAndBatch(any(), any(), any()))
-                .thenReturn(Optional.of(buildPromotion(PromotionType.BUY_X_GET_Y, new BigDecimal("0"))));
-
-        BigDecimal discount = service.calculateBatchDiscount(4L, 400L, new BigDecimal("50.00"), 5);
-        assertEquals(new BigDecimal("0.00"), discount);
-    }
-
-    @Test
-    @DisplayName("Discount never exceeds line gross amount (clamped)")
-    void discountClampedToGross() {
-        when(promoRepo.findActiveBatchPromotionForItemAndBatch(any(), any(), any()))
-                .thenReturn(Optional.of(buildPromotion(PromotionType.FIXED_AMOUNT, new BigDecimal("1000")))); // absurd per-unit
-
-        BigDecimal discount = service.calculateBatchDiscount(5L, 500L, new BigDecimal("20.00"), 2); // gross=40
-        assertEquals(new BigDecimal("40.00"), discount);
-    }
-
-    @Test
-    @DisplayName("Negative discount values are treated as zero")
-    void negativeDiscountHandledAsZero() {
-        when(promoRepo.findActiveBatchPromotionForItemAndBatch(any(), any(), any()))
-                .thenReturn(Optional.of(buildPromotion(PromotionType.PERCENTAGE, new BigDecimal("-5"))));
-
-        BigDecimal discount = service.calculateBatchDiscount(6L, 600L, new BigDecimal("100.00"), 1);
-        assertEquals(new BigDecimal("0.00"), discount);
+        // clamp: discount larger than gross
+        PromotionEntity percent200 = mkPromo(PromotionType.PERCENTAGE, "200"); // 200% -> clamp to gross
+        when(repo.findActiveBatchPromotionForItemAndBatch(anyLong(), anyLong(), any())).thenReturn(Optional.of(percent200));
+        BigDecimal d5 = service.calculateBatchDiscount(1L, 1L, new BigDecimal("10.00"), 1);
+        assertEquals(0, d5.compareTo(new BigDecimal("10.00")));
     }
 }

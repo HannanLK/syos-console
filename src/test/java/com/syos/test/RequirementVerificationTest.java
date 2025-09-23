@@ -118,22 +118,22 @@ class RequirementVerificationTest {
             Class.forName("com.syos.application.usecases.inventory.TransferToWebUseCase");
         });
 
-        System.out.println("✅ VERIFIED: FIFO with expiry exception is implemented via Strategy Pattern");
+        System.out.println(" VERIFIED: FIFO with expiry exception is implemented via Strategy Pattern");
     }
 
     @Test
     @DisplayName("🎉 ALL REQUIREMENTS VERIFICATION SUMMARY")
     void allRequirementsVerificationSummary() {
         System.out.println("\n" + "=".repeat(70));
-        System.out.println("🎉 COMPREHENSIVE REQUIREMENTS VERIFICATION COMPLETE");
+        System.out.println(" COMPREHENSIVE REQUIREMENTS VERIFICATION COMPLETE");
         System.out.println("=".repeat(70));
-        System.out.println("✅ REQUIREMENT 1: Products can be added (database persistence)");
-        System.out.println("✅ REQUIREMENT 2: Required fields are shown in terminal");
-        System.out.println("✅ REQUIREMENT 3: FIFO stock transfer with expiry exception");
-        System.out.println("✅ REQUIREMENT 4: Reorder level threshold set to 50");
-        System.out.println("✅ REQUIREMENT 5: Clean Architecture principles followed");
+        System.out.println(" REQUIREMENT 1: Products can be added (database persistence)");
+        System.out.println(" REQUIREMENT 2: Required fields are shown in terminal");
+        System.out.println(" REQUIREMENT 3: FIFO stock transfer with expiry exception");
+        System.out.println(" REQUIREMENT 4: Reorder level threshold set to 50");
+        System.out.println(" REQUIREMENT 5: Clean Architecture principles followed");
         System.out.println("=".repeat(70));
-        System.out.println("🚀 SYSTEM IS READY FOR DEMONSTRATION!");
+        System.out.println(" SYSTEM BY HANNANLK IS READY FOR DEMONSTRATION!");
         System.out.println("=".repeat(70));
     }
 

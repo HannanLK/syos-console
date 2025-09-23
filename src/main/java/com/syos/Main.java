@@ -333,7 +333,4 @@ public class Main {
 
     }
 
-    /**
-     * Enhanced Menu Factory that includes product management
-     */
 }

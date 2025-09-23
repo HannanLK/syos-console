@@ -35,8 +35,8 @@ public class LoginUseCase {
         }
         try {
             User user = login(request.getUsername(), request.getPassword());
-            // Generate a simple session token for testing
-            String sessionToken = "session_" + System.currentTimeMillis();
+            // Generate a robust unique session token to avoid collisions within the same millisecond
+            String sessionToken = "session_" + java.util.UUID.randomUUID();
             return com.syos.application.dto.responses.AuthResponse.success(
                 sessionToken,
                 user.getId() != null ? user.getId().getValue() : null,

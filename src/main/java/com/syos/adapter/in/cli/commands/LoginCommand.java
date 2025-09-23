@@ -96,21 +96,21 @@ public class LoginCommand implements Command {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy");
         String memberSince = user.getCreatedAt().format(formatter);
         
-        console.println("\n╔══════════════════════════════════════╗");
-        console.println("║           USER PROFILE                 ║");
-        console.println("╠══════════════════════════════════════╣");
-        console.println("║                                      ║");
-        console.println("║  " + greeting + ", " + padRight(user.getName().getValue() + "!", 32 - greeting.length()) + " ║");
-        console.println("║                                      ║");
-        console.println("║  Username: " + padRight(user.getUsername().getValue(), 25) + " ║");
-        console.println("║  Email: " + padRight(user.getEmail().getValue(), 28) + " ║");
+        console.println("\n══════════════════════════════════════");
+        console.println("           USER PROFILE                 ");
+        console.println("══════════════════════════════════════");
+        console.println();
+        int nameWidth = Math.max(0, 32 - greeting.length() - 3);
+        console.println(" " + greeting + ", " + padRight(user.getName().getValue() + "!", nameWidth));
+        console.println(" Username: " + padRight(user.getUsername().getValue(), 25));
+        console.println(" Email: " + padRight(user.getEmail().getValue(), 28));
         // Show Synex Points only for customers
         if (user.getRole() == com.syos.shared.enums.UserRole.CUSTOMER) {
-            console.println("║  Synex Points: " + padRight(String.format("%.2f", user.getSynexPoints().getValue()), 21) + " ║");
+            console.println(" Synex Points: " + padRight(String.format("%.2f", user.getSynexPoints().getValue()), 21));
         }
-        console.println("║  Member Since: " + padRight(memberSince, 21) + " ║");
-        console.println("║                                      ║");
-        console.println("╚══════════════════════════════════════╝");
+        console.println(" Member Since: " + padRight(memberSince, 21));
+        console.println();
+        console.println("══════════════════════════════════════");
     }
     
     private String padRight(String text, int length) {

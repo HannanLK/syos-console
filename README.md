@@ -103,4 +103,3 @@ On first start the app ensures default users exist.
 
 —
 Built for learning and demonstration purposes; see code and tests for further details.
-

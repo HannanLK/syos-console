@@ -15,6 +15,11 @@ public class WarehouseStockEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    // Some databases created earlier migrations with a warehouse_code column (NOT NULL)
+    // We include it here to satisfy constraints if present.
+    @Column(name = "warehouse_code")
+    private String warehouseCode;
     
     @Column(name = "item_code", nullable = false, length = 50)
     private String itemCode;
@@ -24,6 +29,10 @@ public class WarehouseStockEntity {
     
     @Column(name = "batch_id", nullable = false)
     private Long batchId;
+
+    // Original normalized FK to locations table (required by trigger)
+    @Column(name = "location_id")
+    private Long locationId;
     
     @Column(name = "quantity_received", nullable = false, precision = 12, scale = 3)
     private BigDecimal quantityReceived;
@@ -39,7 +48,8 @@ public class WarehouseStockEntity {
     
     @Column(name = "received_by", nullable = false)
     private Long receivedBy;
-    
+
+    // Convenience denormalized location name (if the column exists)
     @Column(name = "location", length = 50)
     private String location;
     
@@ -65,6 +75,9 @@ public class WarehouseStockEntity {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
+    public String getWarehouseCode() { return warehouseCode; }
+    public void setWarehouseCode(String warehouseCode) { this.warehouseCode = warehouseCode; }
+
     public String getItemCode() { return itemCode; }
     public void setItemCode(String itemCode) { this.itemCode = itemCode; }
 
@@ -73,6 +86,9 @@ public class WarehouseStockEntity {
 
     public Long getBatchId() { return batchId; }
     public void setBatchId(Long batchId) { this.batchId = batchId; }
+
+    public Long getLocationId() { return locationId; }
+    public void setLocationId(Long locationId) { this.locationId = locationId; }
 
     public BigDecimal getQuantityReceived() { return quantityReceived; }
     public void setQuantityReceived(BigDecimal quantityReceived) { this.quantityReceived = quantityReceived; }
