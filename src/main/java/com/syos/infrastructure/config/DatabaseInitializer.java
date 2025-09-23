@@ -26,22 +26,22 @@ public class DatabaseInitializer {
             User adminUser = userRepository.findByUsername("admin").orElse(null);
             if (adminUser == null) {
                 User newAdmin = User.createAdmin(
-                    Name.of("System Administrator"),
-                    Username.of("admin"),
-                    Email.of("admin@syos.com"),
-                    Password.hash("admin12345")
+                    Name.of("System Admin"),
+                    Username.of("1000"),
+                    Email.of("admin@syos.lk"),
+                    Password.hash("1qaz!QAZ")
                 );
                 adminUser = userRepository.save(newAdmin);
                 logger.info("Created default admin user");
             }
 
             // Create employee user if not exists
-            if (!userRepository.existsByUsername("employee")) {
+            if (!userRepository.existsByUsername("3033")) {
                 User employee = User.createEmployee(
-                    Name.of("John Employee"),
-                    Username.of("employee"),
-                    Email.of("employee@syos.com"),
-                    Password.hash("employee123"),
+                    Name.of("Test Employee"),
+                    Username.of("3033"),
+                    Email.of("3033@syos.lk"),
+                    Password.hash("1qaz!QAZ"),
                     adminUser != null ? adminUser.getId() : null
                 );
                 userRepository.save(employee);
@@ -49,14 +49,14 @@ public class DatabaseInitializer {
             }
             
             // Create customer user if not exists
-            if (!userRepository.existsByUsername("customer")) {
+            if (!userRepository.existsByUsername("2303")) {
                 User customer = User.createCustomer(
-                    Username.of("customer"),
-                    Email.of("customer@example.com"),
-                    Password.hash("customer123")
+                    Username.of("2303"),
+                    Email.of("2303@tsyos.lk"),
+                    Password.hash("1qaz!QAZ")
                 );
                 // Update name to full name
-                customer = customer.updateProfile(Name.of("Jane Customer"), Email.of("customer@example.com"));
+                customer = customer.updateProfile(Name.of("Test Customer"), Email.of("customer@syos.com"));
                 userRepository.save(customer);
                 logger.info("Created default customer user");
             }

@@ -1,23 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourcePerFileMappings">
-    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/6ee6eb54-8317-4f69-a0a4-cd1721081bd0/console.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
-    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V10__Alter_Batches_Add_Cost_Per_Unit.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
-    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V11__Alter_payment_method_to_varchar.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
-    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V12__Align_Warehouse_Stock_With_Entity.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
-    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V13__Update_Transaction_Entities_For_JPA.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
-    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V14__Alter_Batches_Add_Received_By_And_Align_Expiry_Type.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
-    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V15__Sync_Batches_Cost_Columns.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
-    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V16__Alter_transaction_enums_to_varchar.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
-    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V1_CreateExtensions_Types.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
-    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V2_Create_UsersTable_With_Indexing.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
-    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V3__Create_Core_Tables.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
-    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V4__Create_Item_Master_File_Table.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
-    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V5__Create_Warehouse_And_Inventory_Tables.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
-    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V6__Create_Batch_And_Stock_Tables.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
-    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V7__Create_FIFO_Functions_And_Procedures.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
-    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V8__Create_Transactions_And_Reports.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
-    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V9__Add_Promotion_Batches_And_Flags.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
-    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/database-setup.sql" value="6ee6eb54-8317-4f69-a0a4-cd1721081bd0" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V10__Alter_Batches_Add_Cost_Per_Unit.sql" value="e0539ac9-48a8-4333-b343-f71370a159dc" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V11__Alter_payment_method_to_varchar.sql" value="e0539ac9-48a8-4333-b343-f71370a159dc" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V12__Align_Warehouse_Stock_With_Entity.sql" value="e0539ac9-48a8-4333-b343-f71370a159dc" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V13__Update_Transaction_Entities_For_JPA.sql" value="e0539ac9-48a8-4333-b343-f71370a159dc" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V14__Alter_Batches_Add_Received_By_And_Align_Expiry_Type.sql" value="e0539ac9-48a8-4333-b343-f71370a159dc" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V15__Sync_Batches_Cost_Columns.sql" value="e0539ac9-48a8-4333-b343-f71370a159dc" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V16__Alter_transaction_enums_to_varchar.sql" value="e0539ac9-48a8-4333-b343-f71370a159dc" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V1__CreateExtensions_Types.sql" value="e0539ac9-48a8-4333-b343-f71370a159dc" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V2__Create_UsersTable_With_Indexing.sql" value="e0539ac9-48a8-4333-b343-f71370a159dc" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V3__Create_Core_Tables.sql" value="e0539ac9-48a8-4333-b343-f71370a159dc" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V4__Create_Item_Master_File_Table.sql" value="e0539ac9-48a8-4333-b343-f71370a159dc" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V5__Create_Warehouse_And_Inventory_Tables.sql" value="e0539ac9-48a8-4333-b343-f71370a159dc" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V6__Create_Batch_And_Stock_Tables.sql" value="e0539ac9-48a8-4333-b343-f71370a159dc" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V7__Create_FIFO_Functions_And_Procedures.sql" value="e0539ac9-48a8-4333-b343-f71370a159dc" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V8__Create_Transactions_And_Reports.sql" value="e0539ac9-48a8-4333-b343-f71370a159dc" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/V9__Add_Promotion_Batches_And_Flags.sql" value="e0539ac9-48a8-4333-b343-f71370a159dc" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/database-setup.sql" value="e0539ac9-48a8-4333-b343-f71370a159dc" />
   </component>
 </project>
