@@ -119,6 +119,36 @@ public class ConfigurationManager {
     }
     
     /**
+     * Resolve placeholders of form ${VAR:default} using precedence: JVM -D, then ENV, then default.
+     */
+    private String resolvePlaceholders(String value) {
+        if (value == null || value.isBlank()) return value;
+        String result = value;
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\$\\{([^:}]+)(?::([^}]*))?}");
+        java.util.regex.Matcher matcher = pattern.matcher(result);
+        StringBuffer sb = new StringBuffer();
+        boolean found = false;
+        while (matcher.find()) {
+            found = true;
+            String key = matcher.group(1);
+            String def = matcher.group(2);
+            String replacement = System.getProperty(key);
+            if (replacement == null || replacement.isBlank()) {
+                replacement = System.getenv(key);
+            }
+            if (replacement == null) {
+                replacement = def != null ? def : "";
+            }
+            matcher.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(replacement));
+        }
+        if (found) {
+            matcher.appendTail(sb);
+            return sb.toString();
+        }
+        return result;
+    }
+    
+    /**
      * Check if application is in development mode
      */
     public boolean isDevelopmentMode() {
@@ -131,10 +161,10 @@ public class ConfigurationManager {
      */
     public DatabaseConfig getDatabaseConfig() {
         return new DatabaseConfig(
-            getProperty("datasource.url", "jdbc:postgresql://localhost:5432/syosdb"),
-            getProperty("datasource.username", "postgres"),
-            getProperty("datasource.password", "apiit-LV6"),
-            getProperty("datasource.driver", "org.postgresql.Driver")
+            resolvePlaceholders(getProperty("datasource.url", "jdbc:postgresql://localhost:5432/syosdb")),
+            resolvePlaceholders(getProperty("datasource.username", "postgres")),
+            resolvePlaceholders(getProperty("datasource.password", "")),
+            resolvePlaceholders(getProperty("datasource.driver", "org.postgresql.Driver"))
         );
     }
     

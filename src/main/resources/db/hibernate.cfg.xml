@@ -8,7 +8,8 @@
         <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
         <property name="hibernate.connection.url">jdbc:postgresql://localhost:5432/syosdb</property>
         <property name="hibernate.connection.username">postgres</property>
-        <property name="hibernate.connection.password">apiit-LV6</property>
+        <!-- Intentionally left blank; override via SYOS_DB_PASS env var or -DSYOS_DB_PASS -->
+        <property name="hibernate.connection.password"></property>
         <property name="hibernate.default_schema">public</property>
 
         <!-- HikariCP Connection Pool Settings ===================== -->

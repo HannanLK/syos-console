@@ -1,9 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="syosdb@localhost" uuid="e0539ac9-48a8-4333-b343-f71370a159dc">
+    <data-source source="LOCAL" name="syosdb@localhost" uuid="811cbcf9-62ea-4b20-94b7-df60d3e403b8">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://localhost:5432/syosdb</jdbc-url>
+      <jdbc-additional-properties>
+        <property name="com.intellij.clouds.kubernetes.db.host.port" />
+        <property name="com.intellij.clouds.kubernetes.db.enabled" value="false" />
+        <property name="com.intellij.clouds.kubernetes.db.container.port" />
+      </jdbc-additional-properties>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+    <data-source source="LOCAL" name="db:hibernate.cfg.xml/Hibernate" uuid="398ffb80-9ecb-493f-b01a-4bca2c88ec70">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <imported>true</imported>
+      <remarks>Hibernate
+
+D:/4th_final/sem1/clean_cod/syos/syos-console/src/main/resources/db/hibernate.cfg.xml</remarks>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
       <jdbc-url>jdbc:postgresql://localhost:5432/syosdb</jdbc-url>
       <jdbc-additional-properties>

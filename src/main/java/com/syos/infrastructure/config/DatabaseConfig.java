@@ -19,11 +19,60 @@ public class DatabaseConfig {
     private static EntityManagerFactory entityManagerFactory;
     private static boolean connectionTested = false;
     
-    // Database configuration
-    private static final String DB_URL = "jdbc:postgresql://localhost:5432/syosdb";
-    private static final String DB_USERNAME = "postgres";
-    private static final String DB_PASSWORD = "apiit-LV6";
-    private static final String DB_DRIVER = "org.postgresql.Driver";
+    // Database configuration loaded from ConfigurationManager and environment variables
+    private static final String DB_URL;
+    private static final String DB_USERNAME;
+    private static final String DB_PASSWORD;
+    private static final String DB_DRIVER;
+
+    static {
+        // Defaults
+        String defaultUrl = "jdbc:postgresql://localhost:5432/syosdb";
+        String defaultUser = "postgres";
+        // Do not ship a hardcoded default password; require env/prop or empty
+        String defaultPass = "";
+        String defaultDriver = "org.postgresql.Driver";
+
+        // Load from JVM system properties (highest precedence)
+        String sysUrl = System.getProperty("SYOS_DB_URL");
+        String sysUser = System.getProperty("SYOS_DB_USER");
+        String sysPass = System.getProperty("SYOS_DB_PASS");
+        String sysDriver = System.getProperty("SYOS_DB_DRIVER");
+
+        // Load from environment variables if present
+        String envUrl = System.getenv("SYOS_DB_URL");
+        String envUser = System.getenv("SYOS_DB_USER");
+        String envPass = System.getenv("SYOS_DB_PASS");
+        String envDriver = System.getenv("SYOS_DB_DRIVER");
+
+        // Fallback to application.properties via ConfigurationManager if available
+        String propUrl = null, propUser = null, propPass = null, propDriver = null;
+        try {
+            com.syos.config.ConfigurationManager cfg = new com.syos.config.ConfigurationManager();
+            com.syos.config.ConfigurationManager.DatabaseConfig dbc = cfg.getDatabaseConfig();
+            propUrl = dbc.getUrl();
+            propUser = dbc.getUsername();
+            propPass = dbc.getPassword();
+            propDriver = dbc.getDriver();
+        } catch (Throwable t) {
+            // If config manager fails, continue with sys/env/defaults
+            logger.warn("ConfigurationManager not available, using system/env/defaults for DB config", t);
+        }
+
+        // Precedence: System properties > Environment variables > app config > defaults
+        DB_URL = firstNonEmpty(sysUrl, envUrl, propUrl, defaultUrl);
+        DB_USERNAME = firstNonEmpty(sysUser, envUser, propUser, defaultUser);
+        DB_PASSWORD = firstNonEmpty(sysPass, envPass, propPass, defaultPass);
+        DB_DRIVER = firstNonEmpty(sysDriver, envDriver, propDriver, defaultDriver);
+    }
+
+    private static String firstNonEmpty(String... values) {
+        if (values == null) return null;
+        for (String v : values) {
+            if (v != null && !v.isBlank()) return v;
+        }
+        return null;
+    }
     
     /**
      * Get or create EntityManagerFactory with comprehensive error handling
@@ -188,6 +237,13 @@ public class DatabaseConfig {
      */
     public static String getDatabaseUrl() {
         return DB_URL;
+    }
+
+    /**
+     * Get database username for informational purposes
+     */
+    public static String getDatabaseUsername() {
+        return DB_USERNAME;
     }
     
     /**

@@ -25,11 +25,18 @@ SET item_code = im.item_code
 FROM item_master_file im
 WHERE ws.item_id = im.id AND (ws.item_code IS NULL OR ws.item_code = '');
 
--- 3) Backfill quantities from existing columns
+-- 3) Backfill quantities from existing columns (only when needed to avoid full-table blind updates)
 UPDATE warehouse_stock ws
 SET 
     quantity_received = COALESCE(ws.quantity, 0),
-    quantity_available = COALESCE(ws.quantity, 0) - COALESCE(ws.reserved_quantity, 0);
+    quantity_available = COALESCE(ws.quantity, 0) - COALESCE(ws.reserved_quantity, 0)
+WHERE 
+    -- Update when new columns are NULL or defaulted
+    ws.quantity_received IS NULL OR ws.quantity_available IS NULL OR
+    ws.quantity_received = 0 OR ws.quantity_available < 0 OR
+    -- Or when current values don't match the expected derived amounts
+    ws.quantity_received <> COALESCE(ws.quantity, 0) OR
+    ws.quantity_available <> (COALESCE(ws.quantity, 0) - COALESCE(ws.reserved_quantity, 0));
 
 -- 4) Backfill location from locations table
 UPDATE warehouse_stock ws

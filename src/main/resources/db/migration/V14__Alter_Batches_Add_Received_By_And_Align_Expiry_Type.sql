@@ -112,3 +112,5 @@ BEGIN
         ALTER TABLE batches ADD COLUMN cost_per_unit DECIMAL(12,4);
     END IF;
 END$$;
+
+

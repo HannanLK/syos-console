@@ -140,17 +140,43 @@ BEGIN
     END IF;
 END$$;
 
--- Update existing bill records with transaction data
-UPDATE bills 
-SET 
-    total_amount = t.total_amount,
-    discount_amount = t.discount_amount,
-    cash_tendered = t.cash_tendered,
-    change_amount = t.change_given,
-    synex_points_awarded = CAST(t.synex_points_earned as INTEGER)
-FROM transactions t 
-WHERE bills.transaction_id = t.transaction_id 
-AND bills.total_amount IS NULL;
+-- Update existing bill records with transaction data (handle both id/transaction_id primary key names)
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'transactions' AND column_name = 'transaction_id'
+    ) THEN
+        EXECUTE '
+            UPDATE bills b
+            SET 
+                total_amount = t.total_amount,
+                discount_amount = t.discount_amount,
+                cash_tendered = t.cash_tendered,
+                change_amount = t.change_given,
+                synex_points_awarded = CAST(t.synex_points_earned as INTEGER)
+            FROM transactions t 
+            WHERE b.transaction_id = t.transaction_id 
+              AND b.total_amount IS NULL
+        ';
+    ELSIF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'transactions' AND column_name = 'id'
+    ) THEN
+        EXECUTE '
+            UPDATE bills b
+            SET 
+                total_amount = t.total_amount,
+                discount_amount = t.discount_amount,
+                cash_tendered = t.cash_tendered,
+                change_amount = t.change_given,
+                synex_points_awarded = CAST(t.synex_points_earned as INTEGER)
+            FROM transactions t 
+            WHERE b.transaction_id = t.id 
+              AND b.total_amount IS NULL
+        ';
+    END IF;
+END$$;
 
 -- Create indexes for new columns
 DO $$
@@ -180,12 +206,18 @@ COMMENT ON TABLE bills IS 'Mapped to BillEntity.java - generated bills with PDF 
 -- Ensure data consistency
 DO $$
 BEGIN
-    -- Update any NULL transaction types to default
-    UPDATE transactions SET transaction_type = 'POS' WHERE transaction_type IS NULL;
+    -- Update any NULL transaction types to default (guarded to avoid ineffective updates)
+    IF EXISTS (SELECT 1 FROM transactions WHERE transaction_type IS NULL) THEN
+        EXECUTE 'UPDATE transactions SET transaction_type = ''POS'' WHERE transaction_type IS NULL';
+    END IF;
     
-    -- Update any NULL payment methods to default
-    UPDATE transactions SET payment_method = 'CASH' WHERE payment_method IS NULL;
+    -- Update any NULL payment methods to default (guarded to avoid ineffective updates)
+    IF EXISTS (SELECT 1 FROM transactions WHERE payment_method IS NULL) THEN
+        EXECUTE 'UPDATE transactions SET payment_method = ''CASH'' WHERE payment_method IS NULL';
+    END IF;
     
-    -- Update any NULL transaction status to default
-    UPDATE transactions SET status = 'COMPLETED' WHERE status IS NULL;
+    -- Update any NULL transaction status to default (guarded to avoid ineffective updates)
+    IF EXISTS (SELECT 1 FROM transactions WHERE status IS NULL) THEN
+        EXECUTE 'UPDATE transactions SET status = ''COMPLETED'' WHERE status IS NULL';
+    END IF;
 END$$;
