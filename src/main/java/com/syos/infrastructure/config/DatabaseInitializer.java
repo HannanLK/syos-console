@@ -22,8 +22,8 @@ public class DatabaseInitializer {
         logger.info("Initializing default users in database...");
         
         try {
-            // Ensure admin exists or create one
-            User adminUser = userRepository.findByUsername("admin").orElse(null);
+            // Ensure admin (username 1000) exists or create one
+            User adminUser = userRepository.findByUsername("1000").orElse(null);
             if (adminUser == null) {
                 User newAdmin = User.createAdmin(
                     Name.of("System Admin"),
